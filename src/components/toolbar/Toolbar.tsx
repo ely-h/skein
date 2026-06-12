@@ -20,7 +20,7 @@ interface Props {
 
 export default function Toolbar({ view, onViewChange, zoom, onZoomChange }: Props) {
   return (
-    <div className="flex-none flex items-center gap-3 px-4 py-2 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950">
+    <div className="flex-none flex items-center gap-3 px-4 py-2 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
 
       {/* Sélecteur de vue : Gantt / Liste */}
       <div className="flex items-center gap-1">

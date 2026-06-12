@@ -39,10 +39,10 @@ export default function ProjectSidebar() {
   }
 
   return (
-    <aside className="w-[220px] flex-none flex flex-col border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950">
+    <aside className="w-[220px] flex-none flex flex-col border-r border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">
 
       {/* En-tête sidebar */}
-      <div className="flex-none px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
+      <div className="flex-none px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
         <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
           Projets
         </span>
@@ -68,7 +68,7 @@ export default function ProjectSidebar() {
                     if (e.key === 'Enter') commitRename();
                     if (e.key === 'Escape') setRenamingId(null);
                   }}
-                  className="w-full px-2 py-1.5 text-sm rounded-md bg-white dark:bg-neutral-900 border border-emerald-500 outline-none text-neutral-900 dark:text-neutral-100"
+                  className="w-full px-2 py-1.5 text-sm rounded-md bg-white dark:bg-neutral-800 border border-emerald-500 outline-none text-neutral-900 dark:text-neutral-100"
                 />
               ) : isDeleting ? (
                 <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-red-50 dark:bg-red-950/20">
@@ -98,7 +98,7 @@ export default function ProjectSidebar() {
                     'flex items-center gap-1 px-2 py-1.5 rounded-md cursor-pointer transition-colors',
                     isActive
                       ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400'
-                      : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800',
+                      : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700/50',
                   ].join(' ')}
                 >
                   <span className="flex-1 truncate text-sm">{project.name}</span>
@@ -139,7 +139,7 @@ export default function ProjectSidebar() {
       </ul>
 
       {/* Bouton / formulaire nouveau projet */}
-      <div className="flex-none border-t border-neutral-200 dark:border-neutral-800 p-2">
+      <div className="flex-none border-t border-neutral-200 dark:border-neutral-700 p-2">
         {addingNew ? (
           <input
             ref={newRef}
@@ -151,13 +151,13 @@ export default function ProjectSidebar() {
               if (e.key === 'Escape') { setAddingNew(false); setNewName(''); }
             }}
             placeholder="Nom du projet"
-            className="w-full px-2 py-1.5 text-sm rounded-md bg-white dark:bg-neutral-900 border border-emerald-500 outline-none text-neutral-900 dark:text-neutral-100 placeholder-neutral-400"
+            className="w-full px-2 py-1.5 text-sm rounded-md bg-white dark:bg-neutral-800 border border-emerald-500 outline-none text-neutral-900 dark:text-neutral-100 placeholder-neutral-400"
           />
         ) : (
           <button
             type="button"
             onClick={() => setAddingNew(true)}
-            className="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md transition-colors"
+            className="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 rounded-md transition-colors"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <path d="M12 5v14M5 12h14"/>

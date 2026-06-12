@@ -27,12 +27,12 @@ export default function TaskRow({ task, config, onEdit }: Props) {
 
   return (
     <div
-      className="group flex border-b border-neutral-100 dark:border-neutral-800/60"
+      className="group flex border-b border-neutral-100 dark:border-neutral-700/60"
       style={{ height: ROW_H }}
     >
       {/* Étiquette — reste visible lors du scroll horizontal */}
       <div
-        className="sticky left-0 z-10 flex-none flex items-center justify-between px-3 bg-white dark:bg-neutral-950 border-r border-neutral-200 dark:border-neutral-800 cursor-default"
+        className="sticky left-0 z-10 flex-none flex items-center justify-between px-3 bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 cursor-default"
         data-no-drag=""
         style={{ width: LABEL_W }}
       >
@@ -41,7 +41,7 @@ export default function TaskRow({ task, config, onEdit }: Props) {
         </span>
         <button
           type="button"
-          className="flex-none ml-2 p-1 rounded opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all"
+          className="flex-none ml-2 p-1 rounded opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-all"
           onClick={() => onEdit(task.id)}
           title="Modifier"
         >
