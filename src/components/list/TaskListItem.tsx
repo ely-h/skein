@@ -66,7 +66,7 @@ export default function TaskListItem({ task, onEdit }: Props) {
   }
 
   return (
-    <li className="group flex items-center gap-3 px-6 py-2.5 border-b border-neutral-100 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/40">
+    <li className="group flex items-center gap-3 px-6 py-2.5 border-b border-neutral-100 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700/40">
 
       {/* Icône de statut (cycle au clic) */}
       <button

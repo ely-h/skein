@@ -27,7 +27,7 @@ export default function GanttGrid({ config, zoom, rowCount }: Props) {
             <div
               key={i}
               className={[
-                'absolute top-0 h-full border-r border-neutral-200 dark:border-neutral-800',
+                'absolute top-0 h-full border-r border-neutral-200 dark:border-neutral-700',
                 isWeekend ? 'bg-neutral-50 dark:bg-neutral-900/50' : '',
               ].join(' ')}
               style={{ left: i * config.dayWidth, width: config.dayWidth }}
@@ -55,7 +55,7 @@ export default function GanttGrid({ config, zoom, rowCount }: Props) {
           <div
             key={idx}
             className={[
-              'absolute top-0 h-full border-r border-neutral-200 dark:border-neutral-800',
+              'absolute top-0 h-full border-r border-neutral-200 dark:border-neutral-700',
               col.shaded ? 'bg-neutral-50 dark:bg-neutral-900/50' : '',
             ].join(' ')}
             style={{ left: col.left, width: col.width }}
@@ -93,7 +93,7 @@ export default function GanttGrid({ config, zoom, rowCount }: Props) {
         <div
           key={idx}
           className={[
-            'absolute top-0 h-full border-r border-neutral-200 dark:border-neutral-800',
+            'absolute top-0 h-full border-r border-neutral-200 dark:border-neutral-700',
             col.shaded ? 'bg-neutral-50 dark:bg-neutral-900/50' : '',
           ].join(' ')}
           style={{ left: col.left, width: col.width }}

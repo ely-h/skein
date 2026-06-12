@@ -58,11 +58,11 @@ export default function GanttChart({ zoom, onEditTask, onDragCreate }: Props) {
 
         {/* Header — collé en haut lors du scroll vertical */}
         <div
-          className="sticky top-0 z-20 flex bg-white dark:bg-neutral-950 border-b-2 border-neutral-200 dark:border-neutral-800"
+          className="sticky top-0 z-20 flex bg-white dark:bg-neutral-800 border-b-2 border-neutral-200 dark:border-neutral-700"
           style={{ height: HEADER_H }}
         >
           <div
-            className="sticky left-0 z-30 flex-none flex items-center px-4 bg-white dark:bg-neutral-950 border-r border-neutral-200 dark:border-neutral-800 text-sm font-semibold text-neutral-900 dark:text-neutral-100"
+            className="sticky left-0 z-30 flex-none flex items-center px-4 bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 text-sm font-semibold text-neutral-900 dark:text-neutral-100"
             style={{ width: LABEL_W }}
           >
             <span className="truncate">{activeProject?.name ?? 'Gantt'}</span>
