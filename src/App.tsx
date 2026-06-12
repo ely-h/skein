@@ -16,24 +16,36 @@ function seedIfEmpty(): void {
   addTask({ name: 'Mise en production',  startDate: '2026-06-25', endDate: '2026-06-26', status: 'not_started' });
 }
 
+interface DragDates { start: string; end: string }
+
 export default function App() {
   const [modalOpen,     setModalOpen]     = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [dragDates,     setDragDates]     = useState<DragDates | null>(null);
 
   useEffect(() => { seedIfEmpty(); }, []);
 
   const openNewTask = useCallback((): void => {
+    setDragDates(null);
     setEditingTaskId(null);
     setModalOpen(true);
   }, []);
 
   const openEditTask = useCallback((id: string): void => {
+    setDragDates(null);
     setEditingTaskId(id);
+    setModalOpen(true);
+  }, []);
+
+  const openDragCreate = useCallback((startDate: string, endDate: string): void => {
+    setDragDates({ start: startDate, end: endDate });
+    setEditingTaskId(null);
     setModalOpen(true);
   }, []);
 
   const closeModal = useCallback((): void => {
     setModalOpen(false);
+    setDragDates(null);
   }, []);
 
   return (
@@ -52,11 +64,16 @@ export default function App() {
         </button>
       </header>
 
-      <GanttChart onEditTask={openEditTask} />
+      <GanttChart
+        onEditTask={openEditTask}
+        onDragCreate={openDragCreate}
+      />
 
       {modalOpen && (
         <TaskFormModal
           taskId={editingTaskId}
+          initialStartDate={dragDates?.start}
+          initialEndDate={dragDates?.end}
           onClose={closeModal}
         />
       )}
