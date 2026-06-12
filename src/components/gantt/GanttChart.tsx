@@ -1,30 +1,26 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import { DndContext } from '@dnd-kit/core';
 import { useProjectStore } from '../../store/projectStore';
 import { useTaskStore } from '../../store/taskStore';
 import type { TimelineConfig } from '../../lib/timeline';
+import type { ZoomLevel } from '../../types/index';
 import { useDragCreate } from '../../hooks/useDragCreate';
 import { useTaskDrag } from '../../hooks/useTaskDrag';
-import { DAY_W, LABEL_W, TOTAL_DAYS, HEADER_WEEK_H, HEADER_DAY_H, ROW_H } from './constants';
+import { LABEL_W, HEADER_WEEK_H, HEADER_DAY_H, ROW_H, ZOOM_CONFIGS } from './constants';
 import GanttHeader from './GanttHeader';
 import GanttGrid from './GanttGrid';
 import TaskRow from './TaskRow';
 
-const CHART_CONFIG: TimelineConfig = {
-  startDate: '2026-06-01',
-  totalDays: TOTAL_DAYS,
-  dayWidth: DAY_W,
-};
-
-const HEADER_H = HEADER_WEEK_H + HEADER_DAY_H;
-const TOTAL_W  = LABEL_W + TOTAL_DAYS * DAY_W;
+const CHART_START = '2026-06-01';
+const HEADER_H    = HEADER_WEEK_H + HEADER_DAY_H;
 
 interface Props {
+  zoom:         ZoomLevel;
   onEditTask:   (id: string) => void;
   onDragCreate: (startDate: string, endDate: string) => void;
 }
 
-export default function GanttChart({ onEditTask, onDragCreate }: Props) {
+export default function GanttChart({ zoom, onEditTask, onDragCreate }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const tasks           = useTaskStore((s) => s.tasks);
@@ -34,9 +30,16 @@ export default function GanttChart({ onEditTask, onDragCreate }: Props) {
   const activeProject = projects.find((p) => p.id === activeProjectId);
   const sortedTasks   = [...tasks].sort((a, b) => a.order - b.order);
 
+  const config = useMemo<TimelineConfig>(() => ({
+    startDate: CHART_START,
+    ...ZOOM_CONFIGS[zoom],
+  }), [zoom]);
+
+  const totalW = LABEL_W + config.totalDays * config.dayWidth;
+
   // Drag-create : tirer sur la grille vide pour créer une barre.
   const { preview, onMouseDown, result, clearResult } =
-    useDragCreate(CHART_CONFIG, scrollRef, LABEL_W);
+    useDragCreate(config, scrollRef, LABEL_W);
 
   useEffect(() => {
     if (!result) return;
@@ -45,13 +48,13 @@ export default function GanttChart({ onEditTask, onDragCreate }: Props) {
   }, [result, onDragCreate, clearResult]);
 
   // Move / resize des barres existantes via dnd-kit.
-  const { sensors, onDragStart, onDragMove, onDragEnd } = useTaskDrag(CHART_CONFIG);
+  const { sensors, onDragStart, onDragMove, onDragEnd } = useTaskDrag(config);
 
   const gridRows = Math.max(sortedTasks.length, 3);
 
   return (
     <div ref={scrollRef} className="flex-1 overflow-auto select-none" style={{ minWidth: 0 }}>
-      <div style={{ width: TOTAL_W }}>
+      <div style={{ width: totalW }}>
 
         {/* Header — collé en haut lors du scroll vertical */}
         <div
@@ -64,7 +67,7 @@ export default function GanttChart({ onEditTask, onDragCreate }: Props) {
           >
             <span className="truncate">{activeProject?.name ?? 'Gantt'}</span>
           </div>
-          <GanttHeader config={CHART_CONFIG} />
+          <GanttHeader config={config} zoom={zoom} />
         </div>
 
         {/* Corps — drag-create + move/resize via DndContext */}
@@ -79,14 +82,14 @@ export default function GanttChart({ onEditTask, onDragCreate }: Props) {
             style={{ minHeight: gridRows * ROW_H }}
             onMouseDown={onMouseDown}
           >
-            <GanttGrid config={CHART_CONFIG} rowCount={gridRows} />
+            <GanttGrid config={config} zoom={zoom} rowCount={gridRows} />
 
             {sortedTasks.length > 0 ? (
               sortedTasks.map((task) => (
                 <TaskRow
                   key={task.id}
                   task={task}
-                  config={CHART_CONFIG}
+                  config={config}
                   onEdit={onEditTask}
                 />
               ))
