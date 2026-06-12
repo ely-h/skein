@@ -3,9 +3,10 @@ import { useProjectStore } from './store/projectStore';
 import { useTaskStore } from './store/taskStore';
 import GanttChart from './components/gantt/GanttChart';
 import TaskFormModal from './components/gantt/TaskFormModal';
+import TaskListView from './components/list/TaskListView';
 import Toolbar from './components/toolbar/Toolbar';
 import ProjectSidebar from './components/sidebar/ProjectSidebar';
-import type { ZoomLevel } from './types/index';
+import type { ZoomLevel, ViewMode } from './types/index';
 
 function seedIfEmpty(): void {
   const { projects, addProject } = useProjectStore.getState();
@@ -28,6 +29,7 @@ export default function App() {
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [dragDates,     setDragDates]     = useState<DragDates | null>(null);
   const [zoom,          setZoom]          = useState<ZoomLevel>('day');
+  const [view,          setView]          = useState<ViewMode>('gantt');
 
   useEffect(() => { seedIfEmpty(); }, []);
 
@@ -75,12 +77,19 @@ export default function App() {
         <ProjectSidebar />
 
         <div className="flex flex-col flex-1 overflow-hidden">
-          <Toolbar zoom={zoom} onZoomChange={setZoom} />
-          <GanttChart
-            zoom={zoom}
-            onEditTask={openEditTask}
-            onDragCreate={openDragCreate}
+          <Toolbar
+            view={view}         onViewChange={setView}
+            zoom={zoom}         onZoomChange={setZoom}
           />
+          {view === 'gantt' ? (
+            <GanttChart
+              zoom={zoom}
+              onEditTask={openEditTask}
+              onDragCreate={openDragCreate}
+            />
+          ) : (
+            <TaskListView onEdit={openEditTask} />
+          )}
         </div>
       </div>
 
