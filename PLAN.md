@@ -50,7 +50,7 @@ interface Project {
 - [x] 4. Gantt statique lecture seule : header temporel + grille + barres depuis données en dur. Aucune interaction.
 - [x] 5. Création de tâche basique (bouton + formulaire). CRUD complet.
 - [x] 6. Drag-create : tirer à la souris sur la grille pour créer une barre.
-- [ ] 7. Move + resize d'une barre existante.
+- [x] 7. Move + resize d'une barre existante.
 - [ ] 8. Zoom jour / semaine / mois.
 - [ ] 9. Multi-projet (sidebar + switch).
 - [ ] 9bis. Vue Liste : ViewSwitcher (Gantt <-> Liste) + tasklist (checkbox statut, nom, dates optionnelles). Même store, aucune logique pixel.
