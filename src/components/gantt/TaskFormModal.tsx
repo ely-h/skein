@@ -12,10 +12,13 @@ const LABEL_CLS = 'block text-xs font-medium text-neutral-500 dark:text-neutral-
 interface Props {
   /** null = création, string = édition */
   taskId: string | null;
+  /** Dates pré-remplies lors d'un drag-create (ignorées en mode édition). */
+  initialStartDate?: string;
+  initialEndDate?: string;
   onClose: () => void;
 }
 
-export default function TaskFormModal({ taskId, onClose }: Props) {
+export default function TaskFormModal({ taskId, initialStartDate, initialEndDate, onClose }: Props) {
   const addTask    = useTaskStore((s) => s.addTask);
   const updateTask = useTaskStore((s) => s.updateTask);
   const deleteTask = useTaskStore((s) => s.deleteTask);
@@ -24,8 +27,8 @@ export default function TaskFormModal({ taskId, onClose }: Props) {
   const isEdit = taskId !== null;
 
   const [name,      setName]      = useState(editing?.name ?? '');
-  const [startDate, setStartDate] = useState(editing?.startDate ?? '');
-  const [endDate,   setEndDate]   = useState(editing?.endDate   ?? '');
+  const [startDate, setStartDate] = useState(editing?.startDate ?? initialStartDate ?? '');
+  const [endDate,   setEndDate]   = useState(editing?.endDate   ?? initialEndDate   ?? '');
   const [status,    setStatus]    = useState<TaskStatus>(editing?.status ?? 'not_started');
   const [error,     setError]     = useState('');
   const [confirmDel, setConfirmDel] = useState(false);
