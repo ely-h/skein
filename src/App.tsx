@@ -3,6 +3,8 @@ import { useProjectStore } from './store/projectStore';
 import { useTaskStore } from './store/taskStore';
 import GanttChart from './components/gantt/GanttChart';
 import TaskFormModal from './components/gantt/TaskFormModal';
+import Toolbar from './components/toolbar/Toolbar';
+import type { ZoomLevel } from './types/index';
 
 function seedIfEmpty(): void {
   const { projects, addProject } = useProjectStore.getState();
@@ -22,6 +24,7 @@ export default function App() {
   const [modalOpen,     setModalOpen]     = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [dragDates,     setDragDates]     = useState<DragDates | null>(null);
+  const [zoom,          setZoom]          = useState<ZoomLevel>('day');
 
   useEffect(() => { seedIfEmpty(); }, []);
 
@@ -64,7 +67,10 @@ export default function App() {
         </button>
       </header>
 
+      <Toolbar zoom={zoom} onZoomChange={setZoom} />
+
       <GanttChart
+        zoom={zoom}
         onEditTask={openEditTask}
         onDragCreate={openDragCreate}
       />
