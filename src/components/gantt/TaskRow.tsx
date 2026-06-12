@@ -32,7 +32,8 @@ export default function TaskRow({ task, config, onEdit }: Props) {
     >
       {/* Étiquette — reste visible lors du scroll horizontal */}
       <div
-        className="sticky left-0 z-10 flex-none flex items-center justify-between px-3 bg-white dark:bg-neutral-950 border-r border-neutral-200 dark:border-neutral-800"
+        className="sticky left-0 z-10 flex-none flex items-center justify-between px-3 bg-white dark:bg-neutral-950 border-r border-neutral-200 dark:border-neutral-800 cursor-default"
+        data-no-drag=""
         style={{ width: LABEL_W }}
       >
         <span className="truncate text-sm text-neutral-700 dark:text-neutral-300 flex-1 min-w-0">

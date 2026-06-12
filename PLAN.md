@@ -49,7 +49,7 @@ interface Project {
 - [x] 3. Stores Zustand (projet + tâches) + persist localStorage.
 - [x] 4. Gantt statique lecture seule : header temporel + grille + barres depuis données en dur. Aucune interaction.
 - [x] 5. Création de tâche basique (bouton + formulaire). CRUD complet.
-- [ ] 6. Drag-create : tirer à la souris sur la grille pour créer une barre.
+- [x] 6. Drag-create : tirer à la souris sur la grille pour créer une barre.
 - [ ] 7. Move + resize d'une barre existante.
 - [ ] 8. Zoom jour / semaine / mois.
 - [ ] 9. Multi-projet (sidebar + switch).
