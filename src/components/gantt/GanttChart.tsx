@@ -7,7 +7,7 @@ import GanttGrid from './GanttGrid';
 import TaskRow from './TaskRow';
 
 const CHART_CONFIG: TimelineConfig = {
-  startDate: '2025-06-02',
+  startDate: '2026-06-01',
   totalDays: TOTAL_DAYS,
   dayWidth: DAY_W,
 };
@@ -15,7 +15,11 @@ const CHART_CONFIG: TimelineConfig = {
 const HEADER_H = HEADER_WEEK_H + HEADER_DAY_H;
 const TOTAL_W = LABEL_W + TOTAL_DAYS * DAY_W;
 
-export default function GanttChart() {
+interface Props {
+  onEditTask: (id: string) => void;
+}
+
+export default function GanttChart({ onEditTask }: Props) {
   const tasks = useTaskStore((s) => s.tasks);
   const projects = useProjectStore((s) => s.projects);
   const activeProjectId = useProjectStore((s) => s.activeProjectId);
@@ -48,7 +52,12 @@ export default function GanttChart() {
 
           {sortedTasks.length > 0 ? (
             sortedTasks.map((task) => (
-              <TaskRow key={task.id} task={task} config={CHART_CONFIG} />
+              <TaskRow
+                key={task.id}
+                task={task}
+                config={CHART_CONFIG}
+                onEdit={onEditTask}
+              />
             ))
           ) : (
             <div className="flex items-center justify-center h-32 text-sm text-neutral-400">

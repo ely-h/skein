@@ -6,22 +6,46 @@ import TaskBar from './TaskBar';
 interface Props {
   task: Task;
   config: TimelineConfig;
+  onEdit: (id: string) => void;
 }
 
-export default function TaskRow({ task, config }: Props) {
+function PencilIcon() {
+  return (
+    <svg
+      width="13" height="13" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth="2"
+      strokeLinecap="round" strokeLinejoin="round"
+    >
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+    </svg>
+  );
+}
+
+export default function TaskRow({ task, config, onEdit }: Props) {
   const isScheduled = task.startDate !== null && task.endDate !== null;
 
   return (
     <div
-      className="flex border-b border-neutral-100 dark:border-neutral-800/60"
+      className="group flex border-b border-neutral-100 dark:border-neutral-800/60"
       style={{ height: ROW_H }}
     >
       {/* Étiquette — reste visible lors du scroll horizontal */}
       <div
-        className="sticky left-0 z-10 flex-none flex items-center px-4 bg-white dark:bg-neutral-950 border-r border-neutral-200 dark:border-neutral-800 text-sm text-neutral-700 dark:text-neutral-300"
+        className="sticky left-0 z-10 flex-none flex items-center justify-between px-3 bg-white dark:bg-neutral-950 border-r border-neutral-200 dark:border-neutral-800"
         style={{ width: LABEL_W }}
       >
-        <span className="truncate">{task.name}</span>
+        <span className="truncate text-sm text-neutral-700 dark:text-neutral-300 flex-1 min-w-0">
+          {task.name}
+        </span>
+        <button
+          type="button"
+          className="flex-none ml-2 p-1 rounded opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all"
+          onClick={() => onEdit(task.id)}
+          title="Modifier"
+        >
+          <PencilIcon />
+        </button>
       </div>
 
       {/* Zone barre */}
