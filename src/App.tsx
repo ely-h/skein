@@ -4,6 +4,7 @@ import { useTaskStore } from './store/taskStore';
 import GanttChart from './components/gantt/GanttChart';
 import TaskFormModal from './components/gantt/TaskFormModal';
 import Toolbar from './components/toolbar/Toolbar';
+import ProjectSidebar from './components/sidebar/ProjectSidebar';
 import type { ZoomLevel } from './types/index';
 
 function seedIfEmpty(): void {
@@ -21,6 +22,8 @@ function seedIfEmpty(): void {
 interface DragDates { start: string; end: string }
 
 export default function App() {
+  const activeProjectId = useProjectStore((s) => s.activeProjectId);
+
   const [modalOpen,     setModalOpen]     = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [dragDates,     setDragDates]     = useState<DragDates | null>(null);
@@ -58,7 +61,8 @@ export default function App() {
         <button
           type="button"
           onClick={openNewTask}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-emerald-500 hover:bg-emerald-600 text-white transition-colors"
+          disabled={!activeProjectId}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <path d="M12 5v14M5 12h14" />
@@ -67,13 +71,18 @@ export default function App() {
         </button>
       </header>
 
-      <Toolbar zoom={zoom} onZoomChange={setZoom} />
+      <div className="flex flex-1 overflow-hidden">
+        <ProjectSidebar />
 
-      <GanttChart
-        zoom={zoom}
-        onEditTask={openEditTask}
-        onDragCreate={openDragCreate}
-      />
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <Toolbar zoom={zoom} onZoomChange={setZoom} />
+          <GanttChart
+            zoom={zoom}
+            onEditTask={openEditTask}
+            onDragCreate={openDragCreate}
+          />
+        </div>
+      </div>
 
       {modalOpen && (
         <TaskFormModal
