@@ -47,7 +47,7 @@ interface Project {
 - [x] 1. Setup Vite/TS/Tailwind + figer `types/index.ts`. Rien d'autre.
 - [x] 2. `lib/dates.ts` + `lib/timeline.ts` (logique pure conversion date<->pixel). Tests dessus.
 - [x] 3. Stores Zustand (projet + tâches) + persist localStorage.
-- [ ] 4. Gantt statique lecture seule : header temporel + grille + barres depuis données en dur. Aucune interaction.
+- [x] 4. Gantt statique lecture seule : header temporel + grille + barres depuis données en dur. Aucune interaction.
 - [ ] 5. Création de tâche basique (bouton + formulaire). CRUD complet.
 - [ ] 6. Drag-create : tirer à la souris sur la grille pour créer une barre.
 - [ ] 7. Move + resize d'une barre existante.
