@@ -10,6 +10,8 @@ interface ProjectState {
   renameProject: (id: string, name: string) => void;
   deleteProject: (id: string) => void;
   setActiveProject: (id: string) => void;
+  /** Importe un projet validé, régénère son id pour éviter les collisions. */
+  importProject: (project: Project) => void;
   /** Utilisé uniquement par taskStore pour écrire les tâches d'un projet. */
   _setProjectTasks: (projectId: string, tasks: Task[]) => void;
 }
@@ -54,6 +56,19 @@ export const useProjectStore = create<ProjectState>()(
 
       setActiveProject(id: string): void {
         set({ activeProjectId: id });
+      },
+
+      importProject(project: Project): void {
+        const newId = crypto.randomUUID();
+        const imported: Project = {
+          ...project,
+          id:    newId,
+          tasks: project.tasks.map((t) => ({ ...t, projectId: newId })),
+        };
+        set((state) => ({
+          projects:        [...state.projects, imported],
+          activeProjectId: newId,
+        }));
       },
 
       _setProjectTasks(projectId: string, tasks: Task[]): void {
