@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo } from 'react';
+import { useRef, useEffect, useMemo, forwardRef } from 'react';
 import { DndContext } from '@dnd-kit/core';
 import { useProjectStore } from '../../store/projectStore';
 import { useTaskStore } from '../../store/taskStore';
@@ -20,7 +20,10 @@ interface Props {
   onDragCreate: (startDate: string, endDate: string) => void;
 }
 
-export default function GanttChart({ zoom, onEditTask, onDragCreate }: Props) {
+const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
+  { zoom, onEditTask, onDragCreate },
+  chartRef,
+) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const tasks           = useTaskStore((s) => s.tasks);
@@ -54,7 +57,7 @@ export default function GanttChart({ zoom, onEditTask, onDragCreate }: Props) {
 
   return (
     <div ref={scrollRef} className="flex-1 overflow-auto select-none" style={{ minWidth: 0 }}>
-      <div style={{ width: totalW }}>
+      <div ref={chartRef} style={{ width: totalW }}>
 
         {/* Header — collé en haut lors du scroll vertical */}
         <div
@@ -112,4 +115,6 @@ export default function GanttChart({ zoom, onEditTask, onDragCreate }: Props) {
       </div>
     </div>
   );
-}
+});
+
+export default GanttChart;
