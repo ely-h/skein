@@ -52,6 +52,14 @@ interface Props {
   isExporting:   boolean;
   hasProject:    boolean;
   onImportClick: () => void;
+  // Plage temporelle (vue Gantt uniquement)
+  timelineStart:         string | null; // override stocké (null = auto)
+  timelineEnd:           string | null;
+  effectiveStart:        string;        // valeur résolue à afficher
+  effectiveEnd:          string;
+  taskEarliestDate:      string | null; // borne max pour l'input début
+  taskLatestDate:        string | null; // borne min pour l'input fin
+  onTimelineRangeChange: (start: string | null, end: string | null) => void;
 }
 
 export default function Toolbar({
@@ -61,6 +69,10 @@ export default function Toolbar({
   onExportPng, onExportPdf, onExportJson,
   isExporting, hasProject,
   onImportClick,
+  timelineStart, timelineEnd,
+  effectiveStart, effectiveEnd,
+  taskEarliestDate, taskLatestDate,
+  onTimelineRangeChange,
 }: Props) {
   const exportDisabled = !hasProject || isExporting;
 
@@ -112,6 +124,43 @@ export default function Toolbar({
               </button>
             ))}
           </div>
+        </>
+      )}
+
+      {/* Plage temporelle (vue Gantt + projet actif) */}
+      {view === 'gantt' && hasProject && (
+        <>
+          {DIVIDER}
+          <span className="text-xs text-neutral-400 dark:text-neutral-500 select-none">Plage</span>
+          <input
+            type="date"
+            value={effectiveStart}
+            max={taskEarliestDate ?? undefined}
+            onChange={(e) =>
+              onTimelineRangeChange(e.target.value || null, timelineEnd)
+            }
+            className="text-xs px-2 py-1 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+          />
+          <span className="text-xs text-neutral-400 dark:text-neutral-500 select-none">→</span>
+          <input
+            type="date"
+            value={effectiveEnd}
+            min={taskLatestDate ?? undefined}
+            onChange={(e) =>
+              onTimelineRangeChange(timelineStart, e.target.value || null)
+            }
+            className="text-xs px-2 py-1 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+          />
+          {(timelineStart !== null || timelineEnd !== null) && (
+            <button
+              type="button"
+              title="Réinitialiser la plage automatiquement"
+              onClick={() => onTimelineRangeChange(null, null)}
+              className="text-xs px-1.5 py-1 rounded-xl text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+            >
+              ↺
+            </button>
+          )}
         </>
       )}
 
