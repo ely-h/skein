@@ -62,6 +62,7 @@ interface Project {
 
 - [x] v2/01. Fix persist : `skipHydration` + `rehydrate()` pour éviter la perte de données au refresh. Tests de non-régression.
 - [x] v2/02. UX polish : fond `#F8F7F4` light, gris `not_started` dark plus clair, barres +4px, boutons `rounded-xl`, favicon PNG.
+- [x] v2/03. Sidebar redimensionnable (180–400 px), drag bord droit, largeur persistée en localStorage, sans interférence dnd-kit.
 
 ## Esthétique
 - Épuré, sobre, moderne. Coins ni trop sharp ni trop arrondis (radius ~6-8px).
