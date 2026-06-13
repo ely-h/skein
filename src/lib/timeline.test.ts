@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { TimelineConfig } from './timeline';
-import { dateToPixel, pixelToDate, taskToBar } from './timeline';
+import { dateToPixel, pixelToDate, taskToBar, computeTimelineBounds } from './timeline';
+import { today } from './dates';
 
 const config: TimelineConfig = {
   startDate: '2024-01-01',
@@ -72,5 +73,68 @@ describe('taskToBar', () => {
     const task = { startDate: '2024-01-08', endDate: '2024-01-12' };
     const bar = taskToBar(task, config);
     expect(pixelToDate(bar.x, config)).toBe(task.startDate);
+  });
+});
+
+describe('computeTimelineBounds', () => {
+  it('liste vide : totalDays = minTotalDays', () => {
+    const { totalDays } = computeTimelineBounds([], 56);
+    expect(totalDays).toBe(56);
+  });
+
+  it('liste vide : startDate est aujourd\'hui', () => {
+    const { startDate } = computeTimelineBounds([], 56);
+    expect(startDate).toBe(today());
+  });
+
+  it('tâches avec dates null ignorées, traité comme liste vide', () => {
+    const { totalDays } = computeTimelineBounds(
+      [{ startDate: null, endDate: null }, { startDate: '2024-03-01', endDate: null }],
+      56,
+    );
+    expect(totalDays).toBe(56);
+  });
+
+  it('tâche unique : startDate = taskStart - 7j', () => {
+    const { startDate } = computeTimelineBounds(
+      [{ startDate: '2024-03-08', endDate: '2024-03-10' }],
+      56,
+    );
+    expect(startDate).toBe('2024-03-01'); // 7 jours avant le 08
+  });
+
+  it('tâche unique : totalDays respecte le padding de 14j après endDate', () => {
+    const { startDate, totalDays } = computeTimelineBounds(
+      [{ startDate: '2024-03-08', endDate: '2024-03-10' }],
+      56,
+    );
+    // rangeStart=2024-03-01, rangeEnd=2024-03-24 (10 + 14j) → span=24j < 56
+    expect(startDate).toBe('2024-03-01');
+    expect(totalDays).toBe(56); // plancher minTotalDays
+  });
+
+  it('plusieurs tâches : la plage englobe toutes les dates', () => {
+    const { startDate, totalDays } = computeTimelineBounds(
+      [
+        { startDate: '2024-01-15', endDate: '2024-01-20' },
+        { startDate: '2024-01-01', endDate: '2024-01-05' },
+        { startDate: '2024-02-01', endDate: '2024-02-28' },
+      ],
+      30,
+    );
+    // earliest start = 2024-01-01 → rangeStart = 2023-12-25
+    // latest end     = 2024-02-28 → rangeEnd   = 2024-03-13
+    // span = diff(2023-12-25, 2024-03-13) + 1 = 80j > 30j
+    expect(startDate).toBe('2023-12-25');
+    expect(totalDays).toBe(80);
+  });
+
+  it('tâche très étendue : totalDays > minTotalDays', () => {
+    const { totalDays } = computeTimelineBounds(
+      [{ startDate: '2024-01-01', endDate: '2024-12-31' }],
+      56,
+    );
+    // rangeStart = 2023-12-25, rangeEnd = 2025-01-14 → span >> 56
+    expect(totalDays).toBeGreaterThan(56);
   });
 });

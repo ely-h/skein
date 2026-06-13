@@ -3,6 +3,7 @@ import { DndContext } from '@dnd-kit/core';
 import { useProjectStore } from '../../store/projectStore';
 import { useTaskStore } from '../../store/taskStore';
 import type { TimelineConfig } from '../../lib/timeline';
+import { computeTimelineBounds } from '../../lib/timeline';
 import type { ZoomLevel } from '../../types/index';
 import { useDragCreate } from '../../hooks/useDragCreate';
 import { useTaskDrag } from '../../hooks/useTaskDrag';
@@ -11,8 +12,7 @@ import GanttHeader from './GanttHeader';
 import GanttGrid from './GanttGrid';
 import TaskRow from './TaskRow';
 
-const CHART_START = '2026-06-01';
-const HEADER_H    = HEADER_WEEK_H + HEADER_DAY_H;
+const HEADER_H = HEADER_WEEK_H + HEADER_DAY_H;
 
 interface Props {
   zoom:         ZoomLevel;
@@ -33,10 +33,11 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
   const activeProject = projects.find((p) => p.id === activeProjectId);
   const sortedTasks   = [...tasks].sort((a, b) => a.order - b.order);
 
-  const config = useMemo<TimelineConfig>(() => ({
-    startDate: CHART_START,
-    ...ZOOM_CONFIGS[zoom],
-  }), [zoom]);
+  const config = useMemo<TimelineConfig>(() => {
+    const { dayWidth, totalDays: minDays } = ZOOM_CONFIGS[zoom];
+    const { startDate, totalDays } = computeTimelineBounds(tasks, minDays);
+    return { startDate, totalDays, dayWidth };
+  }, [zoom, tasks]);
 
   const totalW = LABEL_W + config.totalDays * config.dayWidth;
 
