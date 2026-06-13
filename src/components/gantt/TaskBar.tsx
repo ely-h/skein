@@ -10,7 +10,6 @@ const STATUS_BG: Record<TaskStatus, string> = {
   done:        'bg-emerald-400 dark:bg-emerald-500',
 };
 
-// Couleur du texte dans la barre selon le statut
 const STATUS_TEXT: Record<TaskStatus, string> = {
   not_started: 'text-neutral-600 dark:text-neutral-200',
   in_progress: 'text-white',
@@ -39,13 +38,16 @@ function ResizeHandle({ id, side }: { id: string; side: 'left' | 'right' }) {
 }
 
 interface Props {
-  task: Task & { startDate: string; endDate: string };
-  config: TimelineConfig;
+  task:          Task & { startDate: string; endDate: string };
+  config:        TimelineConfig;
+  isSelected:    boolean;
+  isInGroupDrag: boolean;
+  onSelect:      (id: string, additive: boolean) => void;
 }
 
 const MIN_WIDTH_FOR_LABEL = 48;
 
-export default function TaskBar({ task, config }: Props) {
+export default function TaskBar({ task, config, isSelected, isInGroupDrag, onSelect }: Props) {
   const { x, width } = taskToBar(
     { startDate: task.startDate, endDate: task.endDate },
     config,
@@ -55,26 +57,33 @@ export default function TaskBar({ task, config }: Props) {
     id: `move-${task.id}`,
   });
 
+  const isMoving = isDragging || isInGroupDrag;
+
   return (
     <div
       ref={setNodeRef}
       {...attributes}
       {...listeners}
+      data-task-bar=""
       data-no-drag=""
       className={[
         'absolute top-1/2 -translate-y-1/2 h-7 rounded-md touch-none overflow-hidden transition-opacity',
         STATUS_BG[task.status],
-        isDragging
+        isSelected ? 'ring-2 ring-white/75' : '',
+        isMoving
           ? 'opacity-50 shadow-lg cursor-grabbing'
           : 'cursor-grab hover:opacity-85',
       ].join(' ')}
       style={{ left: x, width }}
       title={task.name}
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelect(task.id, e.shiftKey || e.ctrlKey || e.metaKey);
+      }}
     >
       <ResizeHandle id={`resize-left-${task.id}`}  side="left"  />
       <ResizeHandle id={`resize-right-${task.id}`} side="right" />
 
-      {/* Nom de la tâche — visible si la barre est assez large */}
       {width >= MIN_WIDTH_FOR_LABEL && (
         <span
           className={[

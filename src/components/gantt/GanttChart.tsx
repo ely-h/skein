@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo, forwardRef } from 'react';
+import { useRef, useEffect, useMemo, useState, useCallback, forwardRef } from 'react';
 import { DndContext } from '@dnd-kit/core';
 import { useProjectStore } from '../../store/projectStore';
 import { useTaskStore } from '../../store/taskStore';
@@ -32,6 +32,33 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
   const projects        = useProjectStore((s) => s.projects);
   const activeProjectId = useProjectStore((s) => s.activeProjectId);
 
+  // ── Sélection multiple ───────────────────────────────────────────────────────
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Réinitialise la sélection quand on change de projet
+  useEffect(() => { setSelectedIds(new Set()); }, [activeProjectId]);
+
+  // Échap = désélectionner tout
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setSelectedIds(new Set());
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  const handleSelect = useCallback((id: string, additive: boolean): void => {
+    setSelectedIds((prev) => {
+      if (additive) {
+        const next = new Set(prev);
+        if (next.has(id)) { next.delete(id); } else { next.add(id); }
+        return next;
+      }
+      if (prev.size === 1 && prev.has(id)) return prev; // déjà seul sélectionné
+      return new Set([id]);
+    });
+  }, []);
+
   const activeProject = projects.find((p) => p.id === activeProjectId);
   const sortedTasks   = [...tasks].sort((a, b) => a.order - b.order);
 
@@ -59,7 +86,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
   }, [result, onDragCreate, clearResult]);
 
   // Move / resize des barres existantes via dnd-kit.
-  const { sensors, onDragStart, onDragMove, onDragEnd } = useTaskDrag(config);
+  const { sensors, onDragStart, onDragMove, onDragEnd, isGroupDragging } = useTaskDrag(config, selectedIds);
 
   const gridRows = Math.max(sortedTasks.length, 3);
 
@@ -92,6 +119,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
             className="relative cursor-crosshair"
             style={{ minHeight: gridRows * ROW_H }}
             onMouseDown={onMouseDown}
+            onClick={() => setSelectedIds(new Set())}
           >
             <GanttGrid config={config} zoom={zoom} rowCount={gridRows} />
 
@@ -102,6 +130,9 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
                   task={task}
                   config={config}
                   onEdit={onEditTask}
+                  isSelected={selectedIds.has(task.id)}
+                  isInGroupDrag={isGroupDragging && selectedIds.has(task.id)}
+                  onSelect={handleSelect}
                 />
               ))
             ) : (
