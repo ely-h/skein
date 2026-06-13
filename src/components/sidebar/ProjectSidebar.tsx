@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useProjectStore } from '../../store/projectStore';
+import { useSidebarResize } from '../../hooks/useSidebarResize';
 
 export default function ProjectSidebar() {
   const projects         = useProjectStore((s) => s.projects);
@@ -17,6 +18,8 @@ export default function ProjectSidebar() {
 
   const renameRef = useRef<HTMLInputElement>(null);
   const newRef    = useRef<HTMLInputElement>(null);
+
+  const { width, isResizing, handle } = useSidebarResize();
 
   useEffect(() => { if (renamingId) renameRef.current?.focus(); }, [renamingId]);
   useEffect(() => { if (addingNew)  newRef.current?.focus();    }, [addingNew]);
@@ -39,7 +42,10 @@ export default function ProjectSidebar() {
   }
 
   return (
-    <aside className="w-[220px] flex-none flex flex-col border-r border-neutral-200 dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-900">
+    <aside
+      className="flex-none flex flex-col relative border-r border-neutral-200 dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-900"
+      style={{ width }}
+    >
 
       {/* En-tête sidebar */}
       <div className="flex-none px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
@@ -166,6 +172,16 @@ export default function ProjectSidebar() {
           </button>
         )}
       </div>
+
+      {/* Handle de resize — pointer capture, ne remonte pas aux sensors dnd-kit */}
+      <div
+        aria-hidden
+        {...handle}
+        className={[
+          'absolute inset-y-0 right-0 w-1.5 cursor-col-resize z-10 transition-colors',
+          isResizing ? 'bg-emerald-500/50' : 'hover:bg-emerald-400/40',
+        ].join(' ')}
+      />
 
     </aside>
   );
