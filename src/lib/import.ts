@@ -79,10 +79,18 @@ export function parseProjectJson(text: string): Project {
 
   const tasks = obj.tasks.map((t, i) => validateTask(t, i + 1));
 
+  // timelineStart / timelineEnd sont optionnels (rétro-compat avec les exports avant v2/04)
+  if (obj.timelineStart !== undefined && !isNullableDate(obj.timelineStart))
+    throw new Error('"timelineStart" doit être YYYY-MM-DD ou null');
+  if (obj.timelineEnd !== undefined && !isNullableDate(obj.timelineEnd))
+    throw new Error('"timelineEnd" doit être YYYY-MM-DD ou null');
+
   return {
-    id:        obj.id,
-    name:      obj.name,
-    createdAt: obj.createdAt,
+    id:            obj.id,
+    name:          obj.name,
+    createdAt:     obj.createdAt,
     tasks,
+    timelineStart: (obj.timelineStart as string | null | undefined) ?? null,
+    timelineEnd:   (obj.timelineEnd   as string | null | undefined) ?? null,
   };
 }

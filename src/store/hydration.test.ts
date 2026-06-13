@@ -43,6 +43,8 @@ describe('persist rehydration — non-régression', () => {
       name: 'Projet test',
       createdAt: '2024-01-01',
       tasks: [task],
+      timelineStart: null,
+      timelineEnd:   null,
     };
 
     mockStorage.setItem(
@@ -87,6 +89,8 @@ describe('persist rehydration — non-régression', () => {
             order: 0,
           },
         ],
+        timelineStart: null,
+        timelineEnd:   null,
       },
       {
         id: 'proj-b',
@@ -104,6 +108,8 @@ describe('persist rehydration — non-régression', () => {
             order: 0,
           },
         ],
+        timelineStart: null,
+        timelineEnd:   null,
       },
     ];
 

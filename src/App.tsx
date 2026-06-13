@@ -1,6 +1,8 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useProjectStore } from './store/projectStore';
 import { useTaskStore } from './store/taskStore';
+import { resolveTimelineBounds } from './lib/timeline';
+import { ZOOM_CONFIGS } from './components/gantt/constants';
 import GanttChart from './components/gantt/GanttChart';
 import TaskFormModal from './components/gantt/TaskFormModal';
 import TaskListView from './components/list/TaskListView';
@@ -26,11 +28,13 @@ function seedIfEmpty(): void {
 interface DragDates { start: string; end: string }
 
 export default function App() {
-  const activeProjectId = useProjectStore((s) => s.activeProjectId);
-  const activeProject   = useProjectStore((s) =>
+  const activeProjectId   = useProjectStore((s) => s.activeProjectId);
+  const activeProject     = useProjectStore((s) =>
     s.projects.find((p) => p.id === s.activeProjectId) ?? null
   );
-  const importProject = useProjectStore((s) => s.importProject);
+  const importProject     = useProjectStore((s) => s.importProject);
+  const setTimelineRange  = useProjectStore((s) => s.setTimelineRange);
+  const tasks             = useTaskStore((s) => s.tasks);
 
   const { dark, toggle: toggleDark } = useDarkMode();
 
@@ -42,6 +46,30 @@ export default function App() {
   const [dragDates,     setDragDates]     = useState<DragDates | null>(null);
   const [zoom,          setZoom]          = useState<ZoomLevel>('day');
   const [view,          setView]          = useState<ViewMode>('gantt');
+
+  // Plage temporelle résolue pour la toolbar
+  const timelineStart = activeProject?.timelineStart ?? null;
+  const timelineEnd   = activeProject?.timelineEnd   ?? null;
+  const { effectiveStart, effectiveEnd, taskEarliestDate, taskLatestDate } = useMemo(() => {
+    const minDays = ZOOM_CONFIGS[zoom].totalDays;
+    const resolved = resolveTimelineBounds(tasks, timelineStart, timelineEnd, minDays);
+    const dated = tasks.filter(
+      (t): t is typeof t & { startDate: string; endDate: string } =>
+        t.startDate !== null && t.endDate !== null,
+    );
+    const taskEarliestDate = dated.length > 0
+      ? [...dated.map((t) => t.startDate)].sort()[0]
+      : null;
+    const taskLatestDate = dated.length > 0
+      ? [...dated.map((t) => t.endDate)].sort().at(-1)!
+      : null;
+    return {
+      effectiveStart:  resolved.startDate,
+      effectiveEnd:    resolved.endDate,
+      taskEarliestDate,
+      taskLatestDate,
+    };
+  }, [tasks, timelineStart, timelineEnd, zoom]);
   const [isExporting,   setIsExporting]   = useState(false);
   const [importError,   setImportError]   = useState<string | null>(null);
 
@@ -99,6 +127,11 @@ export default function App() {
     fileInputRef.current?.click();
   }, []);
 
+  const handleTimelineRangeChange = useCallback((start: string | null, end: string | null): void => {
+    if (!activeProject) return;
+    setTimelineRange(activeProject.id, start, end);
+  }, [activeProject, setTimelineRange]);
+
   const handleFileChange = useCallback(async (
     e: React.ChangeEvent<HTMLInputElement>,
   ): Promise<void> => {
@@ -148,6 +181,13 @@ export default function App() {
             isExporting={isExporting}
             hasProject={!!activeProjectId}
             onImportClick={handleImportClick}
+            timelineStart={timelineStart}
+            timelineEnd={timelineEnd}
+            effectiveStart={effectiveStart}
+            effectiveEnd={effectiveEnd}
+            taskEarliestDate={taskEarliestDate}
+            taskLatestDate={taskLatestDate}
+            onTimelineRangeChange={handleTimelineRangeChange}
           />
           {importError && (
             <div className="flex items-center justify-between gap-3 px-4 py-2 bg-red-50 dark:bg-red-950 border-b border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs">
