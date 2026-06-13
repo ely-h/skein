@@ -3,7 +3,7 @@ import { DndContext } from '@dnd-kit/core';
 import { useProjectStore } from '../../store/projectStore';
 import { useTaskStore } from '../../store/taskStore';
 import type { TimelineConfig } from '../../lib/timeline';
-import { computeTimelineBounds } from '../../lib/timeline';
+import { resolveTimelineBounds } from '../../lib/timeline';
 import type { ZoomLevel } from '../../types/index';
 import { useDragCreate } from '../../hooks/useDragCreate';
 import { useTaskDrag } from '../../hooks/useTaskDrag';
@@ -35,9 +35,14 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
 
   const config = useMemo<TimelineConfig>(() => {
     const { dayWidth, totalDays: minDays } = ZOOM_CONFIGS[zoom];
-    const { startDate, totalDays } = computeTimelineBounds(tasks, minDays);
+    const { startDate, totalDays } = resolveTimelineBounds(
+      tasks,
+      activeProject?.timelineStart ?? null,
+      activeProject?.timelineEnd   ?? null,
+      minDays,
+    );
     return { startDate, totalDays, dayWidth };
-  }, [zoom, tasks]);
+  }, [zoom, tasks, activeProject]);
 
   const totalW = LABEL_W + config.totalDays * config.dayWidth;
 

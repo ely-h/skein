@@ -36,6 +36,42 @@ export function computeTimelineBounds(
   return { startDate: rangeStart, totalDays };
 }
 
+/**
+ * Comme computeTimelineBounds, mais tient compte des overrides manuels du projet.
+ * La plage manuelle est toujours étendue pour inclure toutes les tâches existantes.
+ */
+export function resolveTimelineBounds(
+  tasks: ReadonlyArray<{ startDate: string | null; endDate: string | null }>,
+  timelineStart: string | null,
+  timelineEnd:   string | null,
+  minTotalDays:  number,
+): { startDate: string; endDate: string; totalDays: number } {
+  const auto = computeTimelineBounds(tasks, minTotalDays);
+  const autoEnd = addDays(auto.startDate, auto.totalDays - 1);
+
+  if (timelineStart === null && timelineEnd === null) {
+    return { ...auto, endDate: autoEnd };
+  }
+
+  let start = timelineStart ?? auto.startDate;
+  let end   = timelineEnd   ?? autoEnd;
+
+  // Clamp : la plage ne peut pas exclure une tâche existante
+  const dated = tasks.filter(
+    (t): t is { startDate: string; endDate: string } =>
+      t.startDate !== null && t.endDate !== null,
+  );
+  if (dated.length > 0) {
+    const taskStart = [...dated.map((t) => t.startDate)].sort()[0];
+    const taskEnd   = [...dated.map((t) => t.endDate)].sort().at(-1)!;
+    if (start > taskStart) start = taskStart;
+    if (end   < taskEnd)   end   = taskEnd;
+  }
+
+  const totalDays = Math.max(diffInDays(start, end) + 1, minTotalDays);
+  return { startDate: start, endDate: end, totalDays };
+}
+
 export function taskToBar(
   task: { startDate: string; endDate: string },
   config: TimelineConfig,
