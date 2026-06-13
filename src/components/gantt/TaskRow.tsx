@@ -4,7 +4,7 @@ import { LABEL_W, ROW_H, TOTAL_DAYS } from './constants';
 import TaskBar from './TaskBar';
 
 const STATUS_DOT: Record<TaskStatus, string> = {
-  not_started: 'bg-neutral-300 dark:bg-neutral-600',
+  not_started: 'bg-neutral-300 dark:bg-neutral-500',
   in_progress: 'bg-sky-400 dark:bg-sky-500',
   done:        'bg-emerald-400 dark:bg-emerald-500',
 };
@@ -38,7 +38,7 @@ export default function TaskRow({ task, config, onEdit }: Props) {
     >
       {/* Étiquette — reste visible lors du scroll horizontal */}
       <div
-        className="sticky left-0 z-10 flex-none flex items-center gap-2 px-3 bg-white dark:bg-neutral-800 group-hover:bg-neutral-50 dark:group-hover:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 transition-colors cursor-default"
+        className="sticky left-0 z-10 flex-none flex items-center gap-2 px-3 bg-[#F8F7F4] dark:bg-neutral-800 group-hover:bg-neutral-100 dark:group-hover:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 transition-colors cursor-default"
         data-no-drag=""
         style={{ width: LABEL_W }}
       >
@@ -51,7 +51,7 @@ export default function TaskRow({ task, config, onEdit }: Props) {
 
         <button
           type="button"
-          className="flex-none p-1 rounded-md opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-all duration-150"
+          className="flex-none p-1 rounded-xl opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-all duration-150"
           onClick={() => onEdit(task.id)}
           title="Modifier"
         >
