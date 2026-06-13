@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 interface Props {
-  onClose: () => void;
+  onClose:  () => void;
   children: React.ReactNode;
 }
 
@@ -21,12 +21,12 @@ export default function Modal({ onClose, children }: Props) {
       onClick={onClose}
     >
       <div
-        className="bg-white dark:bg-neutral-800 rounded-lg shadow-2xl w-full max-w-md mx-4 p-6"
+        className="modal-panel bg-white dark:bg-neutral-800 rounded-lg shadow-2xl w-full max-w-md mx-4 p-6"
         onClick={(e) => e.stopPropagation()}
       >
         {children}
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
