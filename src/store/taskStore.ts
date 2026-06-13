@@ -34,6 +34,10 @@ export const useTaskStore = create<TaskState>()((set) => {
     set({ tasks });
   });
 
+  // L'abonnement est en place : on peut maintenant déclencher l'hydratation
+  // de projectStore depuis localStorage sans risque de race condition.
+  useProjectStore.persist.rehydrate();
+
   return {
     tasks: getActiveTasks(),
 
