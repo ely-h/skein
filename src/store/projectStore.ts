@@ -81,6 +81,10 @@ export const useProjectStore = create<ProjectState>()(
     }),
     {
       name: 'skein-projects',
+      // skipHydration: taskStore déclenche rehydrate() une fois son abonnement établi,
+      // ce qui garantit qu'aucune hydratation ne précède le subscriber (évite la perte
+      // de données si seedIfEmpty s'exécute avant la fin de l'hydratation).
+      skipHydration: true,
       partialize: (state) => ({
         projects: state.projects,
         activeProjectId: state.activeProjectId,
