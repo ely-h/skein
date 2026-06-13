@@ -8,6 +8,7 @@ import Toolbar from './components/toolbar/Toolbar';
 import ProjectSidebar from './components/sidebar/ProjectSidebar';
 import { exportToPng, exportToPdf, exportToJson } from './lib/export';
 import { parseProjectJson } from './lib/import';
+import { useDarkMode } from './hooks/useDarkMode';
 import type { ZoomLevel, ViewMode } from './types/index';
 
 function seedIfEmpty(): void {
@@ -30,6 +31,8 @@ export default function App() {
     s.projects.find((p) => p.id === s.activeProjectId) ?? null
   );
   const importProject = useProjectStore((s) => s.importProject);
+
+  const { dark, toggle: toggleDark } = useDarkMode();
 
   const ganttRef     = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -138,6 +141,7 @@ export default function App() {
           <Toolbar
             view={view}            onViewChange={setView}
             zoom={zoom}            onZoomChange={setZoom}
+            dark={dark}            onToggleDark={toggleDark}
             onExportPng={handleExportPng}
             onExportPdf={handleExportPdf}
             onExportJson={handleExportJson}
