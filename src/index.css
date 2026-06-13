@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+/* Bascule dark mode sur la classe .dark plutôt que via media query */
+@variant dark (&:where(.dark, .dark *));
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(4px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+
+.modal-panel {
+  animation: modal-in 0.15s ease-out;
+}

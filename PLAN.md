@@ -56,7 +56,7 @@ interface Project {
 - [x] 9bis. Vue Liste : ViewSwitcher (Gantt <-> Liste) + tasklist (checkbox statut, nom, dates optionnelles). Même store, aucune logique pixel.
 - [x] 10. Export PNG / PDF / JSON.
 - [x] 11. Import JSON avec validation (refuse un JSON malformé proprement).
-- [ ] 12. Polish : transitions, états de tâches, dark/light, vert menthe.
+- [x] 12. Polish : transitions, états de tâches, dark/light, vert menthe.
 
 ## Esthétique
 - Épuré, sobre, moderne. Coins ni trop sharp ni trop arrondis (radius ~6-8px).
