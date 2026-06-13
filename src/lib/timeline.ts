@@ -84,6 +84,42 @@ export function resolveTimelineBounds(
   return { startDate: start, endDate: end, totalDays };
 }
 
+/**
+ * Retourne les nouvelles bornes à stocker si des tâches dépassent les bornes manuelles.
+ * Retourne null si aucune extension n'est nécessaire ou si le mode est entièrement auto.
+ */
+export function computeRequiredBoundsExpansion(
+  tasks: ReadonlyArray<{ startDate: string | null; endDate: string | null }>,
+  timelineStart: string | null,
+  timelineEnd:   string | null,
+): { timelineStart: string | null; timelineEnd: string | null } | null {
+  if (timelineStart === null && timelineEnd === null) return null;
+
+  const dated = tasks.filter(
+    (t): t is { startDate: string; endDate: string } =>
+      t.startDate !== null && t.endDate !== null,
+  );
+  if (dated.length === 0) return null;
+
+  const earliest = [...dated.map((t) => t.startDate)].sort()[0];
+  const latest   = [...dated.map((t) => t.endDate)].sort().at(-1)!;
+
+  let newStart = timelineStart;
+  let newEnd   = timelineEnd;
+  let changed  = false;
+
+  if (timelineStart !== null && earliest < timelineStart) {
+    newStart = addDays(earliest, -BOUNDS_PAD_BEFORE);
+    changed  = true;
+  }
+  if (timelineEnd !== null && latest > timelineEnd) {
+    newEnd  = addDays(latest, BOUNDS_PAD_AFTER);
+    changed = true;
+  }
+
+  return changed ? { timelineStart: newStart, timelineEnd: newEnd } : null;
+}
+
 export function taskToBar(
   task: { startDate: string; endDate: string },
   config: TimelineConfig,

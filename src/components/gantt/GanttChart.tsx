@@ -3,7 +3,7 @@ import { DndContext } from '@dnd-kit/core';
 import { useProjectStore } from '../../store/projectStore';
 import { useTaskStore } from '../../store/taskStore';
 import type { TimelineConfig } from '../../lib/timeline';
-import { resolveTimelineBounds } from '../../lib/timeline';
+import { resolveTimelineBounds, computeRequiredBoundsExpansion } from '../../lib/timeline';
 import type { ZoomLevel } from '../../types/index';
 import { useDragCreate } from '../../hooks/useDragCreate';
 import { useTaskDrag } from '../../hooks/useTaskDrag';
@@ -31,6 +31,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
   const tasks           = useTaskStore((s) => s.tasks);
   const projects        = useProjectStore((s) => s.projects);
   const activeProjectId = useProjectStore((s) => s.activeProjectId);
+  const setTimelineRange = useProjectStore((s) => s.setTimelineRange);
 
   // ── Sélection multiple ───────────────────────────────────────────────────────
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -61,6 +62,19 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
 
   const activeProject = projects.find((p) => p.id === activeProjectId);
   const sortedTasks   = [...tasks].sort((a, b) => a.order - b.order);
+
+  // Étend les bornes manuelles si une tâche dépasse la plage stockée
+  useEffect(() => {
+    if (!activeProject) return;
+    const expansion = computeRequiredBoundsExpansion(
+      tasks,
+      activeProject.timelineStart,
+      activeProject.timelineEnd,
+    );
+    if (expansion) {
+      setTimelineRange(activeProject.id, expansion.timelineStart, expansion.timelineEnd);
+    }
+  }, [tasks, activeProject?.timelineStart, activeProject?.timelineEnd, activeProject?.id, setTimelineRange]);
 
   const config = useMemo<TimelineConfig>(() => {
     const { totalDays: minDays } = ZOOM_CONFIGS[zoom];

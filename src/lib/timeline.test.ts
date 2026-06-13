@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { TimelineConfig } from './timeline';
-import { dateToPixel, pixelToDate, taskToBar, computeTimelineBounds } from './timeline';
+import { dateToPixel, pixelToDate, taskToBar, computeTimelineBounds, computeRequiredBoundsExpansion } from './timeline';
 import { today } from './dates';
 
 const config: TimelineConfig = {
@@ -136,5 +136,79 @@ describe('computeTimelineBounds', () => {
     );
     // rangeStart = 2023-12-25, rangeEnd = 2025-01-14 → span >> 56
     expect(totalDays).toBeGreaterThan(56);
+  });
+});
+
+describe('computeRequiredBoundsExpansion', () => {
+  const TASK_IN = [{ startDate: '2024-03-10', endDate: '2024-03-20' }];
+
+  it('mode entièrement auto (null/null) → null', () => {
+    expect(computeRequiredBoundsExpansion(TASK_IN, null, null)).toBeNull();
+  });
+
+  it('aucune tâche planifiée → null', () => {
+    expect(computeRequiredBoundsExpansion(
+      [{ startDate: null, endDate: null }],
+      '2024-03-01', '2024-04-30',
+    )).toBeNull();
+  });
+
+  it('tâche dans la plage → null', () => {
+    expect(computeRequiredBoundsExpansion(
+      TASK_IN, '2024-03-01', '2024-04-30',
+    )).toBeNull();
+  });
+
+  it('tâche avant timelineStart → étend le début avec padding', () => {
+    const result = computeRequiredBoundsExpansion(
+      TASK_IN, '2024-03-15', '2024-04-30',
+    );
+    // earliest = 2024-03-10, newStart = 2024-03-10 - 7j = 2024-03-03
+    expect(result).not.toBeNull();
+    expect(result!.timelineStart).toBe('2024-03-03');
+    expect(result!.timelineEnd).toBe('2024-04-30'); // inchangé
+  });
+
+  it('tâche après timelineEnd → étend la fin avec padding', () => {
+    const result = computeRequiredBoundsExpansion(
+      TASK_IN, '2024-02-01', '2024-03-15',
+    );
+    // latest = 2024-03-20, newEnd = 2024-03-20 + 14j = 2024-04-03
+    expect(result).not.toBeNull();
+    expect(result!.timelineStart).toBe('2024-02-01'); // inchangé
+    expect(result!.timelineEnd).toBe('2024-04-03');
+  });
+
+  it('tâche déborde des deux côtés → étend les deux bornes', () => {
+    const result = computeRequiredBoundsExpansion(
+      TASK_IN, '2024-03-12', '2024-03-18',
+    );
+    expect(result).not.toBeNull();
+    expect(result!.timelineStart).toBe('2024-03-03'); // 03-10 - 7j
+    expect(result!.timelineEnd).toBe('2024-04-03');   // 03-20 + 14j
+  });
+
+  it('only timelineStart set, tâche dans la plage → null', () => {
+    expect(computeRequiredBoundsExpansion(
+      TASK_IN, '2024-03-01', null,
+    )).toBeNull();
+  });
+
+  it('only timelineStart set, tâche avant → étend début, fin null inchangée', () => {
+    const result = computeRequiredBoundsExpansion(
+      TASK_IN, '2024-03-15', null,
+    );
+    expect(result).not.toBeNull();
+    expect(result!.timelineStart).toBe('2024-03-03');
+    expect(result!.timelineEnd).toBeNull();
+  });
+
+  it('only timelineEnd set, tâche après → étend fin, début null inchangé', () => {
+    const result = computeRequiredBoundsExpansion(
+      TASK_IN, null, '2024-03-15',
+    );
+    expect(result).not.toBeNull();
+    expect(result!.timelineStart).toBeNull();
+    expect(result!.timelineEnd).toBe('2024-04-03');
   });
 });
