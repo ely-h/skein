@@ -7,6 +7,7 @@ import TaskListView from './components/list/TaskListView';
 import Toolbar from './components/toolbar/Toolbar';
 import ProjectSidebar from './components/sidebar/ProjectSidebar';
 import { exportToPng, exportToPdf, exportToJson } from './lib/export';
+import { parseProjectJson } from './lib/import';
 import type { ZoomLevel, ViewMode } from './types/index';
 
 function seedIfEmpty(): void {
@@ -28,8 +29,10 @@ export default function App() {
   const activeProject   = useProjectStore((s) =>
     s.projects.find((p) => p.id === s.activeProjectId) ?? null
   );
+  const importProject = useProjectStore((s) => s.importProject);
 
-  const ganttRef = useRef<HTMLDivElement>(null);
+  const ganttRef     = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [modalOpen,     setModalOpen]     = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
@@ -37,6 +40,7 @@ export default function App() {
   const [zoom,          setZoom]          = useState<ZoomLevel>('day');
   const [view,          setView]          = useState<ViewMode>('gantt');
   const [isExporting,   setIsExporting]   = useState(false);
+  const [importError,   setImportError]   = useState<string | null>(null);
 
   useEffect(() => { seedIfEmpty(); }, []);
 
@@ -88,6 +92,28 @@ export default function App() {
     exportToJson(activeProject);
   }, [activeProject]);
 
+  const handleImportClick = useCallback((): void => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback(async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ): Promise<void> => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const project = parseProjectJson(text);
+      importProject(project);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erreur inconnue';
+      setImportError(message);
+      setTimeout(() => setImportError(null), 6000);
+    }
+  }, [importProject]);
+
   return (
     <div className="h-screen flex flex-col bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100">
       <header className="flex-none flex items-center justify-between px-6 h-12 border-b border-neutral-200 dark:border-neutral-700 shrink-0">
@@ -117,7 +143,20 @@ export default function App() {
             onExportJson={handleExportJson}
             isExporting={isExporting}
             hasProject={!!activeProjectId}
+            onImportClick={handleImportClick}
           />
+          {importError && (
+            <div className="flex items-center justify-between gap-3 px-4 py-2 bg-red-50 dark:bg-red-950 border-b border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs">
+              <span>{importError}</span>
+              <button
+                type="button"
+                onClick={() => setImportError(null)}
+                className="flex-none font-medium hover:underline"
+              >
+                Fermer
+              </button>
+            </div>
+          )}
           {view === 'gantt' ? (
             <GanttChart
               ref={ganttRef}
@@ -130,6 +169,14 @@ export default function App() {
           )}
         </div>
       </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        className="hidden"
+        onChange={handleFileChange}
+      />
 
       {modalOpen && (
         <TaskFormModal

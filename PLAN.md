@@ -55,7 +55,7 @@ interface Project {
 - [x] 9. Multi-projet (sidebar + switch).
 - [x] 9bis. Vue Liste : ViewSwitcher (Gantt <-> Liste) + tasklist (checkbox statut, nom, dates optionnelles). Même store, aucune logique pixel.
 - [x] 10. Export PNG / PDF / JSON.
-- [ ] 11. Import JSON avec validation (refuse un JSON malformé proprement).
+- [x] 11. Import JSON avec validation (refuse un JSON malformé proprement).
 - [ ] 12. Polish : transitions, états de tâches, dark/light, vert menthe.
 
 ## Esthétique
