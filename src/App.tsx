@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useProjectStore } from './store/projectStore';
 import { useTaskStore } from './store/taskStore';
-import { resolveTimelineBounds } from './lib/timeline';
+import { resolveTimelineBounds, DAY_WIDTH_BOUNDS } from './lib/timeline';
 import { ZOOM_CONFIGS } from './components/gantt/constants';
+import { useColumnWidth } from './hooks/useColumnWidth';
 import GanttChart from './components/gantt/GanttChart';
 import TaskFormModal from './components/gantt/TaskFormModal';
 import TaskListView from './components/list/TaskListView';
@@ -37,6 +38,7 @@ export default function App() {
   const tasks             = useTaskStore((s) => s.tasks);
 
   const { dark, toggle: toggleDark } = useDarkMode();
+  const { widths, setWidth } = useColumnWidth();
 
   const ganttRef     = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -46,6 +48,15 @@ export default function App() {
   const [dragDates,     setDragDates]     = useState<DragDates | null>(null);
   const [zoom,          setZoom]          = useState<ZoomLevel>('day');
   const [view,          setView]          = useState<ViewMode>('gantt');
+
+  // Largeur de colonne pour le zoom courant
+  const dayWidth    = widths[zoom];
+  const dayWidthMin = DAY_WIDTH_BOUNDS[zoom].min;
+  const dayWidthMax = DAY_WIDTH_BOUNDS[zoom].max;
+
+  const handleDayWidthChange = useCallback((w: number): void => {
+    setWidth(zoom, w);
+  }, [zoom, setWidth]);
 
   // Plage temporelle résolue pour la toolbar
   const timelineStart = activeProject?.timelineStart ?? null;
@@ -181,6 +192,10 @@ export default function App() {
             isExporting={isExporting}
             hasProject={!!activeProjectId}
             onImportClick={handleImportClick}
+            dayWidth={dayWidth}
+            dayWidthMin={dayWidthMin}
+            dayWidthMax={dayWidthMax}
+            onDayWidthChange={handleDayWidthChange}
             timelineStart={timelineStart}
             timelineEnd={timelineEnd}
             effectiveStart={effectiveStart}
@@ -205,6 +220,8 @@ export default function App() {
             <GanttChart
               ref={ganttRef}
               zoom={zoom}
+              dayWidth={dayWidth}
+              onDayWidthChange={handleDayWidthChange}
               onEditTask={openEditTask}
               onDragCreate={openDragCreate}
             />

@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { format, getISOWeek } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { addDays, parseDate } from '../../lib/dates';
@@ -9,7 +10,48 @@ interface Cell {
   label: string;
   widthPx: number;
   key: number;
+  spanDays: number;
   isWeekend?: boolean;
+}
+
+function ResizeGrip({
+  spanDays,
+  currentDayWidth,
+  onDayWidthChange,
+}: {
+  spanDays: number;
+  currentDayWidth: number;
+  onDayWidthChange: (w: number) => void;
+}) {
+  const stateRef = useRef<{ startX: number; startDayWidth: number } | null>(null);
+
+  return (
+    <div
+      className="absolute inset-y-0 right-0 w-1.5 cursor-col-resize z-10 hover:bg-emerald-400/40 active:bg-emerald-500/50"
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        e.currentTarget.setPointerCapture(e.pointerId);
+        stateRef.current = { startX: e.clientX, startDayWidth: currentDayWidth };
+      }}
+      onPointerMove={(e) => {
+        if (!stateRef.current || !e.currentTarget.hasPointerCapture(e.pointerId)) return;
+        const delta = e.clientX - stateRef.current.startX;
+        onDayWidthChange(stateRef.current.startDayWidth + delta / spanDays);
+      }}
+      onPointerUp={(e) => {
+        stateRef.current = null;
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+      }}
+      onPointerCancel={(e) => {
+        stateRef.current = null;
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+      }}
+    />
+  );
 }
 
 // ─── Vue Jour ────────────────────────────────────────────────────────────────
@@ -22,7 +64,7 @@ function dayRow1(config: TimelineConfig): Cell[] {
     const dow        = date.getDay();
     const isoDay     = dow === 0 ? 7 : dow;
     const span       = Math.min(isoDay === 1 ? 7 : 8 - isoDay, config.totalDays - i);
-    cells.push({ label: format(date, 'd MMM', { locale: fr }), widthPx: span * config.dayWidth, key: i });
+    cells.push({ label: format(date, 'd MMM', { locale: fr }), widthPx: span * config.dayWidth, spanDays: span, key: i });
     i += span;
   }
   return cells;
@@ -35,6 +77,7 @@ function dayRow2(config: TimelineConfig): Cell[] {
     return {
       label:     String(date.getDate()),
       widthPx:   config.dayWidth,
+      spanDays:  1,
       key:       i,
       isWeekend: dow === 0 || dow === 6,
     };
@@ -48,7 +91,7 @@ function weekRow2(config: TimelineConfig): Cell[] {
   for (let i = 0; i < config.totalDays; i += 7) {
     const date = parseDate(addDays(config.startDate, i));
     const span = Math.min(7, config.totalDays - i);
-    cells.push({ label: `S${getISOWeek(date)}`, widthPx: span * config.dayWidth, key: i });
+    cells.push({ label: `S${getISOWeek(date)}`, widthPx: span * config.dayWidth, spanDays: span, key: i });
   }
   return cells;
 }
@@ -61,9 +104,10 @@ function weekRow1(config: TimelineConfig): Cell[] {
     const label     = format(date, 'MMM yyyy', { locale: fr });
     const last      = cells[cells.length - 1];
     if (last && last.label === label) {
-      last.widthPx += span * config.dayWidth;
+      last.widthPx  += span * config.dayWidth;
+      last.spanDays += span;
     } else {
-      cells.push({ label, widthPx: span * config.dayWidth, key: i });
+      cells.push({ label, widthPx: span * config.dayWidth, spanDays: span, key: i });
     }
   }
   return cells;
@@ -84,7 +128,7 @@ function monthRow2(config: TimelineConfig): Cell[] {
       if (d.getFullYear() !== y || d.getMonth() !== m) break;
       span++;
     }
-    cells.push({ label: format(date, 'MMM', { locale: fr }), widthPx: span * config.dayWidth, key: i });
+    cells.push({ label: format(date, 'MMM', { locale: fr }), widthPx: span * config.dayWidth, spanDays: span, key: i });
     i += span;
   }
   return cells;
@@ -98,9 +142,10 @@ function monthRow1(config: TimelineConfig): Cell[] {
     const label = String(date.getFullYear());
     const last  = cells[cells.length - 1];
     if (last && last.label === label) {
-      last.widthPx += m.widthPx;
+      last.widthPx  += m.widthPx;
+      last.spanDays += m.spanDays;
     } else {
-      cells.push({ label, widthPx: m.widthPx, key: m.key });
+      cells.push({ label, widthPx: m.widthPx, spanDays: m.spanDays, key: m.key });
     }
   }
   return cells;
@@ -108,9 +153,13 @@ function monthRow1(config: TimelineConfig): Cell[] {
 
 // ─── Composant ────────────────────────────────────────────────────────────────
 
-interface Props { config: TimelineConfig; zoom: ZoomLevel }
+interface Props {
+  config:            TimelineConfig;
+  zoom:              ZoomLevel;
+  onDayWidthChange?: (w: number) => void;
+}
 
-export default function GanttHeader({ config, zoom }: Props) {
+export default function GanttHeader({ config, zoom, onDayWidthChange }: Props) {
   const row1 = zoom === 'day'   ? dayRow1(config)
              : zoom === 'week'  ? weekRow1(config)
              : monthRow1(config);
@@ -144,7 +193,7 @@ export default function GanttHeader({ config, zoom }: Props) {
           <div
             key={cell.key}
             className={[
-              'flex-none flex items-center justify-center text-xs overflow-hidden',
+              'relative flex-none flex items-center justify-center text-xs overflow-hidden',
               'border-r border-neutral-200 dark:border-neutral-700',
               cell.isWeekend
                 ? 'text-neutral-400 dark:text-neutral-600 bg-neutral-50 dark:bg-neutral-900'
@@ -153,6 +202,13 @@ export default function GanttHeader({ config, zoom }: Props) {
             style={{ width: cell.widthPx }}
           >
             {cell.label}
+            {onDayWidthChange && (
+              <ResizeGrip
+                spanDays={cell.spanDays}
+                currentDayWidth={config.dayWidth}
+                onDayWidthChange={onDayWidthChange}
+              />
+            )}
           </div>
         ))}
       </div>

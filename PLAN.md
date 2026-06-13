@@ -65,6 +65,7 @@ interface Project {
 - [x] v2/03. Sidebar redimensionnable (180–400 px), drag bord droit, largeur persistée en localStorage, sans interférence dnd-kit.
 - [x] v2/fix. Timeline bounds dynamiques : la plage s'ajuste automatiquement pour toujours inclure toutes les tâches.
 - [x] v2/04. Plage configurable manuellement : timelineStart/End par projet, sélecteur dans la Toolbar, impossible de réduire en dessous des dates des tâches.
+- [x] v2/05. Largeur de colonne ajustable : slider Toolbar + drag bord de colonne dans le header, persistée par zoom en localStorage, toute logique via TimelineConfig.
 
 ## Esthétique
 - Épuré, sobre, moderne. Coins ni trop sharp ni trop arrondis (radius ~6-8px).

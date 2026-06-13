@@ -1,4 +1,16 @@
 import { addDays, diffInDays, today } from './dates';
+import type { ZoomLevel } from '../types/index';
+
+export const DAY_WIDTH_BOUNDS: Record<ZoomLevel, { min: number; max: number }> = {
+  day:   { min: 20, max: 80 },
+  week:  { min: 6,  max: 30 },
+  month: { min: 2,  max: 12 },
+};
+
+export function clampDayWidth(zoom: ZoomLevel, w: number): number {
+  const { min, max } = DAY_WIDTH_BOUNDS[zoom];
+  return Math.max(min, Math.min(max, w));
+}
 
 export interface TimelineConfig {
   startDate: string; // YYYY-MM-DD, premier jour affiché dans le Gantt
