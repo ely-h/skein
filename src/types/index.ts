@@ -19,4 +19,6 @@ export interface Project {
   name: string;
   createdAt: string;
   tasks: Task[];
+  timelineStart: string | null; // null = plage auto calculée
+  timelineEnd:   string | null; // null = plage auto calculée
 }

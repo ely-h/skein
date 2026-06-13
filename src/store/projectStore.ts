@@ -12,6 +12,8 @@ interface ProjectState {
   setActiveProject: (id: string) => void;
   /** Importe un projet validé, régénère son id pour éviter les collisions. */
   importProject: (project: Project) => void;
+  /** Définit la plage temporelle manuelle du projet (null = auto). */
+  setTimelineRange: (projectId: string, start: string | null, end: string | null) => void;
   /** Utilisé uniquement par taskStore pour écrire les tâches d'un projet. */
   _setProjectTasks: (projectId: string, tasks: Task[]) => void;
 }
@@ -28,6 +30,8 @@ export const useProjectStore = create<ProjectState>()(
           name: name.trim(),
           createdAt: today(),
           tasks: [],
+          timelineStart: null,
+          timelineEnd:   null,
         };
         set((state) => ({
           projects: [...state.projects, project],
@@ -58,12 +62,22 @@ export const useProjectStore = create<ProjectState>()(
         set({ activeProjectId: id });
       },
 
+      setTimelineRange(projectId: string, start: string | null, end: string | null): void {
+        set((state) => ({
+          projects: state.projects.map((p) =>
+            p.id === projectId ? { ...p, timelineStart: start, timelineEnd: end } : p
+          ),
+        }));
+      },
+
       importProject(project: Project): void {
         const newId = crypto.randomUUID();
         const imported: Project = {
           ...project,
-          id:    newId,
-          tasks: project.tasks.map((t) => ({ ...t, projectId: newId })),
+          id:            newId,
+          timelineStart: project.timelineStart ?? null,
+          timelineEnd:   project.timelineEnd   ?? null,
+          tasks:         project.tasks.map((t) => ({ ...t, projectId: newId })),
         };
         set((state) => ({
           projects:        [...state.projects, imported],
