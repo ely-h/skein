@@ -52,6 +52,11 @@ interface Props {
   isExporting:   boolean;
   hasProject:    boolean;
   onImportClick: () => void;
+  // Largeur de colonne (vue Gantt uniquement)
+  dayWidth:              number;
+  dayWidthMin:           number;
+  dayWidthMax:           number;
+  onDayWidthChange:      (w: number) => void;
   // Plage temporelle (vue Gantt uniquement)
   timelineStart:         string | null; // override stocké (null = auto)
   timelineEnd:           string | null;
@@ -69,6 +74,7 @@ export default function Toolbar({
   onExportPng, onExportPdf, onExportJson,
   isExporting, hasProject,
   onImportClick,
+  dayWidth, dayWidthMin, dayWidthMax, onDayWidthChange,
   timelineStart, timelineEnd,
   effectiveStart, effectiveEnd,
   taskEarliestDate, taskLatestDate,
@@ -124,6 +130,23 @@ export default function Toolbar({
               </button>
             ))}
           </div>
+        </>
+      )}
+
+      {/* Largeur de colonne */}
+      {view === 'gantt' && hasProject && (
+        <>
+          {DIVIDER}
+          <input
+            type="range"
+            min={dayWidthMin}
+            max={dayWidthMax}
+            step={1}
+            value={Math.round(dayWidth)}
+            onChange={(e) => onDayWidthChange(Number(e.target.value))}
+            className="w-20 accent-emerald-500 cursor-pointer"
+            title={`Largeur : ${Math.round(dayWidth)} px/jour`}
+          />
         </>
       )}
 
