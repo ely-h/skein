@@ -64,12 +64,12 @@ export default function Toolbar({
 }: Props) {
   const exportDisabled = !hasProject || isExporting;
 
-  const btnBase  = 'px-3 py-1 text-xs font-medium rounded-md transition-colors';
+  const btnBase  = 'px-3 py-1 text-xs font-medium rounded-xl transition-colors';
   const btnGhost = `${btnBase} text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700`;
-  const btnIcon  = 'p-1.5 rounded-md transition-colors text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-100';
+  const btnIcon  = 'p-1.5 rounded-xl transition-colors text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-100';
 
   return (
-    <div className="flex-none flex items-center gap-2 px-4 py-2 border-b border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+    <div className="flex-none flex items-center gap-2 px-4 py-2 border-b border-neutral-200 dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800">
 
       {/* Sélecteur de vue : Gantt / Liste */}
       <div className="flex items-center gap-1">

@@ -5,7 +5,7 @@ import { useTaskStore } from '../../store/taskStore';
 import Modal from '../ui/Modal';
 
 const INPUT_CLS =
-  'w-full rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-1.5 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50';
+  'w-full rounded-md border border-neutral-200 dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-900 px-3 py-1.5 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50';
 
 const LABEL_CLS = 'block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1';
 
@@ -155,14 +155,14 @@ export default function TaskFormModal({ taskId, initialStartDate, initialEndDate
 
           <button
             type="button"
-            className="ml-auto px-4 py-2 text-sm rounded-md bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors"
+            className="ml-auto px-4 py-2 text-sm rounded-xl bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors"
             onClick={onClose}
           >
             Annuler
           </button>
           <button
             type="submit"
-            className="px-4 py-2 text-sm font-medium rounded-md bg-emerald-500 hover:bg-emerald-600 text-white transition-colors"
+            className="px-4 py-2 text-sm font-medium rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white transition-colors"
           >
             {isEdit ? 'Enregistrer' : 'Créer'}
           </button>
