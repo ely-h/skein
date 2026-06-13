@@ -1,6 +1,6 @@
 import type { Task, TaskStatus } from '../../types/index';
 import type { TimelineConfig } from '../../lib/timeline';
-import { LABEL_W, ROW_H, TOTAL_DAYS } from './constants';
+import { LABEL_W, ROW_H } from './constants';
 import TaskBar from './TaskBar';
 
 const STATUS_DOT: Record<TaskStatus, string> = {
@@ -10,9 +10,12 @@ const STATUS_DOT: Record<TaskStatus, string> = {
 };
 
 interface Props {
-  task:   Task;
-  config: TimelineConfig;
-  onEdit: (id: string) => void;
+  task:          Task;
+  config:        TimelineConfig;
+  onEdit:        (id: string) => void;
+  isSelected:    boolean;
+  isInGroupDrag: boolean;
+  onSelect:      (id: string, additive: boolean) => void;
 }
 
 function PencilIcon() {
@@ -28,21 +31,34 @@ function PencilIcon() {
   );
 }
 
-export default function TaskRow({ task, config, onEdit }: Props) {
+export default function TaskRow({ task, config, onEdit, isSelected, isInGroupDrag, onSelect }: Props) {
   const isScheduled = task.startDate !== null && task.endDate !== null;
 
   return (
     <div
-      className="group flex border-b border-neutral-100 dark:border-neutral-700/60 transition-colors hover:bg-neutral-50/60 dark:hover:bg-neutral-800/40"
+      className={[
+        'group flex border-b border-neutral-100 dark:border-neutral-700/60 transition-colors',
+        isSelected
+          ? 'bg-emerald-50/50 dark:bg-emerald-950/20 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
+          : 'hover:bg-neutral-50/60 dark:hover:bg-neutral-800/40',
+      ].join(' ')}
       style={{ height: ROW_H }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelect(task.id, e.shiftKey || e.ctrlKey || e.metaKey);
+      }}
     >
       {/* Étiquette — reste visible lors du scroll horizontal */}
       <div
-        className="sticky left-0 z-10 flex-none flex items-center gap-2 px-3 bg-[#F8F7F4] dark:bg-neutral-800 group-hover:bg-neutral-100 dark:group-hover:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 transition-colors cursor-default"
+        className={[
+          'sticky left-0 z-10 flex-none flex items-center gap-2 px-3 border-r border-neutral-200 dark:border-neutral-700 transition-colors cursor-default',
+          isSelected
+            ? 'bg-emerald-50 dark:bg-emerald-950/30 group-hover:bg-emerald-100/70 dark:group-hover:bg-emerald-950/40'
+            : 'bg-[#F8F7F4] dark:bg-neutral-800 group-hover:bg-neutral-100 dark:group-hover:bg-neutral-800',
+        ].join(' ')}
         data-no-drag=""
         style={{ width: LABEL_W }}
       >
-        {/* Point de statut */}
         <div className={`flex-none w-1.5 h-1.5 rounded-full ${STATUS_DOT[task.status]}`} />
 
         <span className="truncate text-sm text-neutral-700 dark:text-neutral-300 flex-1 min-w-0">
@@ -52,7 +68,7 @@ export default function TaskRow({ task, config, onEdit }: Props) {
         <button
           type="button"
           className="flex-none p-1 rounded-xl opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-all duration-150"
-          onClick={() => onEdit(task.id)}
+          onClick={(e) => { e.stopPropagation(); onEdit(task.id); }}
           title="Modifier"
         >
           <PencilIcon />
@@ -62,12 +78,15 @@ export default function TaskRow({ task, config, onEdit }: Props) {
       {/* Zone barre */}
       <div
         className="relative flex-none"
-        style={{ width: TOTAL_DAYS * config.dayWidth }}
+        style={{ width: config.totalDays * config.dayWidth }}
       >
         {isScheduled && (
           <TaskBar
             task={task as Task & { startDate: string; endDate: string }}
             config={config}
+            isSelected={isSelected}
+            isInGroupDrag={isInGroupDrag}
+            onSelect={onSelect}
           />
         )}
       </div>

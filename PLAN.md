@@ -67,6 +67,7 @@ interface Project {
 - [x] v2/04. Plage configurable manuellement : timelineStart/End par projet, sélecteur dans la Toolbar, impossible de réduire en dessous des dates des tâches.
 - [x] v2/05. Largeur de colonne ajustable : slider Toolbar + drag bord de colonne dans le header, persistée par zoom en localStorage, toute logique via TimelineConfig.
 - [x] v2/06. Export dropdown : bouton unique "Exporter" avec menu PNG / PDF / JSON, fermeture au clic extérieur.
+- [x] v2/07. Sélection multiple : clic/Shift+clic/Ctrl+clic, highlight visuel, déplacement groupé du même delta, Échap désélectionne.
 
 ## Esthétique
 - Épuré, sobre, moderne. Coins ni trop sharp ni trop arrondis (radius ~6-8px).
