@@ -21,6 +21,7 @@ interface Props {
   onExportJson:  () => void;
   isExporting:   boolean;
   hasProject:    boolean;
+  onImportClick: () => void;
 }
 
 export default function Toolbar({
@@ -28,6 +29,7 @@ export default function Toolbar({
   zoom, onZoomChange,
   onExportPng, onExportPdf, onExportJson,
   isExporting, hasProject,
+  onImportClick,
 }: Props) {
   const exportDisabled = !hasProject || isExporting;
 
@@ -78,8 +80,20 @@ export default function Toolbar({
         </>
       )}
 
-      {/* Export — poussé à droite */}
-      <div className="ml-auto flex items-center gap-1">
+      {/* Import */}
+      <div className="ml-auto flex items-center">
+        <button
+          type="button"
+          onClick={onImportClick}
+          className="px-3 py-1 text-xs font-medium rounded-md transition-colors text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+        >
+          Importer
+        </button>
+        <div className="w-px h-4 bg-neutral-200 dark:bg-neutral-700 mx-2" />
+      </div>
+
+      {/* Export */}
+      <div className="flex items-center gap-1">
         <span className="text-xs text-neutral-400 dark:text-neutral-500 mr-1">
           {isExporting ? 'Export…' : 'Export'}
         </span>
