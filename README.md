@@ -1,73 +1,82 @@
-# React + TypeScript + Vite
+# Skein
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Skein est un outil de planification en diagramme de Gantt fait maison. Le constat de départ est simple : les alternatives en ligne sont soit payantes, soit franchement moches, soit les deux. L'objectif était donc d'avoir quelque chose de sobre et agréable à utiliser, sans compte à créer ni abonnement à souscrire.
 
-Currently, two official plugins are available:
+Le projet a été développé en vibe-coding assisté par IA, avec une architecture pensée dès le départ pour rester propre et maintenable malgré ce mode de développement.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+![capture d'écran](./docs/screenshot.png)
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Fonctionnalités
 
-## Expanding the ESLint configuration
+**Gantt**
+- Création de tâches par drag sur le calendrier
+- Déplacement et redimensionnement des barres à la souris
+- Zoom jour, semaine ou mois
+- Week-ends grisés
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+**Tâches**
+- Trois états : pas commencé, en cours, terminé
+- Vue liste et vue Gantt sur les mêmes données
+- Les tâches sans dates apparaissent uniquement en vue liste
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+**Projets**
+- Gestion de plusieurs projets indépendants
+- Export PNG, PDF, JSON
+- Import depuis un fichier JSON pour reconstruire un Gantt existant
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+**Interface**
+- Dark mode et light mode
+- Données sauvegardées localement dans le navigateur, rien n'est envoyé nulle part
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+---
+
+## Stack
+
+React 19, TypeScript strict, Vite, Tailwind v4, Zustand, dnd-kit, date-fns, jsPDF, html-to-image.
+
+---
+
+## Lancer le projet en local
+
+```bash
+git clone https://github.com/ely-h/skein.git
+cd skein
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+L'app tourne sur `http://localhost:5173`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build   # build de production
+npm run test    # lance les tests
 ```
+
+---
+
+## Architecture
+
+Le projet suit une séparation stricte entre logique et UI. `types/` et `lib/` sont de la logique pure sans aucune dépendance vers les composants. Les composants consomment les stores Zustand, et toute conversion date/pixel passe uniquement par `lib/timeline.ts`. Cette contrainte évite que le code parte en spaghetti au fil des ajouts.
+
+```
+src/
+├── types/        # contrats de données (Task, Project, TaskStatus)
+├── store/        # état global (Zustand + persist localStorage)
+├── lib/          # logique pure (dates, timeline, export, import)
+├── components/   # UI (gantt/, list/, sidebar/, toolbar/, ui/)
+└── hooks/        # drag-create, move, resize
+```
+
+---
+
+## Démo
+
+Disponible sur [ely-h.github.io/skein](https://ely-h.github.io/skein)
+
+---
+
+## Licence
+
+MIT — faites-en ce que vous voulez.
