@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import type { DragStartEvent, DragMoveEvent } from '@dnd-kit/core';
 import type { TimelineConfig } from '../lib/timeline';
@@ -7,11 +7,13 @@ import { addDays } from '../lib/dates';
 
 type DragType = 'move' | 'resize-left' | 'resize-right';
 
-interface DragOrigin {
-  taskId: string;
-  type: DragType;
+interface DragState {
+  taskId:        string;
+  type:          DragType;
   originalStart: string;
-  originalEnd: string;
+  originalEnd:   string;
+  // Non-null quand déplacement groupé (move uniquement)
+  groupOrigins:  Map<string, { start: string; end: string }> | null;
 }
 
 function parseDragId(id: string): { taskId: string; type: DragType } | null {
@@ -21,9 +23,10 @@ function parseDragId(id: string): { taskId: string; type: DragType } | null {
   return null;
 }
 
-export function useTaskDrag(config: TimelineConfig) {
+export function useTaskDrag(config: TimelineConfig, selectedIds: Set<string>) {
   const updateTask = useTaskStore((s) => s.updateTask);
-  const originRef  = useRef<DragOrigin | null>(null);
+  const stateRef   = useRef<DragState | null>(null);
+  const [isGroupDragging, setIsGroupDragging] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
@@ -32,36 +35,69 @@ export function useTaskDrag(config: TimelineConfig) {
   const onDragStart = useCallback(({ active }: DragStartEvent): void => {
     const parsed = parseDragId(String(active.id));
     if (!parsed) return;
-    const task = useTaskStore.getState().tasks.find((t) => t.id === parsed.taskId);
+    const tasks = useTaskStore.getState().tasks;
+    const task  = tasks.find((t) => t.id === parsed.taskId);
     if (!task?.startDate || !task?.endDate) return;
-    originRef.current = { ...parsed, originalStart: task.startDate, originalEnd: task.endDate };
-  }, []);
+
+    const isGroupMove =
+      parsed.type === 'move' &&
+      selectedIds.has(parsed.taskId) &&
+      selectedIds.size > 1;
+
+    let groupOrigins: Map<string, { start: string; end: string }> | null = null;
+    if (isGroupMove) {
+      groupOrigins = new Map();
+      for (const id of selectedIds) {
+        if (id === parsed.taskId) continue;
+        const t = tasks.find((tt) => tt.id === id);
+        if (t?.startDate && t?.endDate) {
+          groupOrigins.set(id, { start: t.startDate, end: t.endDate });
+        }
+      }
+      setIsGroupDragging(true);
+    }
+
+    stateRef.current = {
+      taskId:        parsed.taskId,
+      type:          parsed.type,
+      originalStart: task.startDate,
+      originalEnd:   task.endDate,
+      groupOrigins,
+    };
+  }, [selectedIds]);
 
   const onDragMove = useCallback(({ delta }: DragMoveEvent): void => {
-    const o = originRef.current;
+    const o = stateRef.current;
     if (!o) return;
 
     const days = Math.round(delta.x / config.dayWidth);
-    let start = o.originalStart;
-    let end   = o.originalEnd;
+    let start  = o.originalStart;
+    let end    = o.originalEnd;
 
     if (o.type === 'move') {
       start = addDays(o.originalStart, days);
       end   = addDays(o.originalEnd,   days);
     } else if (o.type === 'resize-left') {
       start = addDays(o.originalStart, days);
-      if (start > o.originalEnd) start = o.originalEnd; // durée min 1 jour
+      if (start > o.originalEnd) start = o.originalEnd;
     } else {
       end = addDays(o.originalEnd, days);
-      if (end < o.originalStart) end = o.originalStart; // durée min 1 jour
+      if (end < o.originalStart) end = o.originalStart;
     }
 
     updateTask(o.taskId, { startDate: start, endDate: end });
+
+    if (o.type === 'move' && o.groupOrigins) {
+      o.groupOrigins.forEach(({ start: gs, end: ge }, id) => {
+        updateTask(id, { startDate: addDays(gs, days), endDate: addDays(ge, days) });
+      });
+    }
   }, [config.dayWidth, updateTask]);
 
   const onDragEnd = useCallback((): void => {
-    originRef.current = null;
+    stateRef.current = null;
+    setIsGroupDragging(false);
   }, []);
 
-  return { sensors, onDragStart, onDragMove, onDragEnd };
+  return { sensors, onDragStart, onDragMove, onDragEnd, isGroupDragging };
 }
