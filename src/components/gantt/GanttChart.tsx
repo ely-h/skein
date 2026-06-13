@@ -15,13 +15,15 @@ import TaskRow from './TaskRow';
 const HEADER_H = HEADER_WEEK_H + HEADER_DAY_H;
 
 interface Props {
-  zoom:         ZoomLevel;
-  onEditTask:   (id: string) => void;
-  onDragCreate: (startDate: string, endDate: string) => void;
+  zoom:              ZoomLevel;
+  dayWidth:          number;
+  onDayWidthChange:  (w: number) => void;
+  onEditTask:        (id: string) => void;
+  onDragCreate:      (startDate: string, endDate: string) => void;
 }
 
 const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
-  { zoom, onEditTask, onDragCreate },
+  { zoom, dayWidth, onDayWidthChange, onEditTask, onDragCreate },
   chartRef,
 ) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -34,7 +36,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
   const sortedTasks   = [...tasks].sort((a, b) => a.order - b.order);
 
   const config = useMemo<TimelineConfig>(() => {
-    const { dayWidth, totalDays: minDays } = ZOOM_CONFIGS[zoom];
+    const { totalDays: minDays } = ZOOM_CONFIGS[zoom];
     const { startDate, totalDays } = resolveTimelineBounds(
       tasks,
       activeProject?.timelineStart ?? null,
@@ -42,7 +44,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
       minDays,
     );
     return { startDate, totalDays, dayWidth };
-  }, [zoom, tasks, activeProject]);
+  }, [zoom, dayWidth, tasks, activeProject]);
 
   const totalW = LABEL_W + config.totalDays * config.dayWidth;
 
@@ -76,7 +78,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
           >
             <span className="truncate">{activeProject?.name ?? 'Gantt'}</span>
           </div>
-          <GanttHeader config={config} zoom={zoom} />
+          <GanttHeader config={config} zoom={zoom} onDayWidthChange={onDayWidthChange} />
         </div>
 
         {/* Corps — drag-create + move/resize via DndContext */}
