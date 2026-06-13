@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useProjectStore } from './store/projectStore';
 import { useTaskStore } from './store/taskStore';
 import GanttChart from './components/gantt/GanttChart';
@@ -6,6 +6,7 @@ import TaskFormModal from './components/gantt/TaskFormModal';
 import TaskListView from './components/list/TaskListView';
 import Toolbar from './components/toolbar/Toolbar';
 import ProjectSidebar from './components/sidebar/ProjectSidebar';
+import { exportToPng, exportToPdf, exportToJson } from './lib/export';
 import type { ZoomLevel, ViewMode } from './types/index';
 
 function seedIfEmpty(): void {
@@ -24,12 +25,18 @@ interface DragDates { start: string; end: string }
 
 export default function App() {
   const activeProjectId = useProjectStore((s) => s.activeProjectId);
+  const activeProject   = useProjectStore((s) =>
+    s.projects.find((p) => p.id === s.activeProjectId) ?? null
+  );
+
+  const ganttRef = useRef<HTMLDivElement>(null);
 
   const [modalOpen,     setModalOpen]     = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [dragDates,     setDragDates]     = useState<DragDates | null>(null);
   const [zoom,          setZoom]          = useState<ZoomLevel>('day');
   const [view,          setView]          = useState<ViewMode>('gantt');
+  const [isExporting,   setIsExporting]   = useState(false);
 
   useEffect(() => { seedIfEmpty(); }, []);
 
@@ -56,6 +63,31 @@ export default function App() {
     setDragDates(null);
   }, []);
 
+  const handleExportPng = useCallback(async (): Promise<void> => {
+    if (!ganttRef.current || !activeProject) return;
+    setIsExporting(true);
+    try {
+      await exportToPng(ganttRef.current, activeProject.name);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [activeProject]);
+
+  const handleExportPdf = useCallback(async (): Promise<void> => {
+    if (!ganttRef.current || !activeProject) return;
+    setIsExporting(true);
+    try {
+      await exportToPdf(ganttRef.current, activeProject.name);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [activeProject]);
+
+  const handleExportJson = useCallback((): void => {
+    if (!activeProject) return;
+    exportToJson(activeProject);
+  }, [activeProject]);
+
   return (
     <div className="h-screen flex flex-col bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100">
       <header className="flex-none flex items-center justify-between px-6 h-12 border-b border-neutral-200 dark:border-neutral-700 shrink-0">
@@ -78,11 +110,17 @@ export default function App() {
 
         <div className="flex flex-col flex-1 overflow-hidden">
           <Toolbar
-            view={view}         onViewChange={setView}
-            zoom={zoom}         onZoomChange={setZoom}
+            view={view}            onViewChange={setView}
+            zoom={zoom}            onZoomChange={setZoom}
+            onExportPng={handleExportPng}
+            onExportPdf={handleExportPdf}
+            onExportJson={handleExportJson}
+            isExporting={isExporting}
+            hasProject={!!activeProjectId}
           />
           {view === 'gantt' ? (
             <GanttChart
+              ref={ganttRef}
               zoom={zoom}
               onEditTask={openEditTask}
               onDragCreate={openDragCreate}
