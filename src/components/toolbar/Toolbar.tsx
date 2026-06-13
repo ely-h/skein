@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react';
 import type { ZoomLevel, ViewMode } from '../../types/index';
 
 const ZOOM_LABELS: Record<ZoomLevel, string> = {
@@ -81,6 +82,20 @@ export default function Toolbar({
   onTimelineRangeChange,
 }: Props) {
   const exportDisabled = !hasProject || isExporting;
+
+  const [exportOpen, setExportOpen] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!exportOpen) return;
+    function onOutside(e: MouseEvent) {
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) {
+        setExportOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', onOutside);
+    return () => document.removeEventListener('mousedown', onOutside);
+  }, [exportOpen]);
 
   const btnBase  = 'px-3 py-1 text-xs font-medium rounded-xl transition-colors';
   const btnGhost = `${btnBase} text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700`;
@@ -209,40 +224,50 @@ export default function Toolbar({
 
         {DIVIDER}
 
-        {/* Export */}
-        <span className="text-xs text-neutral-400 dark:text-neutral-500 select-none">
-          {isExporting ? 'Export…' : 'Export'}
-        </span>
+        {/* Export — dropdown */}
+        <div ref={exportRef} className="relative">
+          <button
+            type="button"
+            disabled={exportDisabled}
+            onClick={() => setExportOpen((o) => !o)}
+            className={`${btnGhost} disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1`}
+          >
+            {isExporting ? 'Export…' : 'Exporter'}
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
 
-        {view === 'gantt' && (
-          <>
-            <button
-              type="button"
-              onClick={onExportPng}
-              disabled={exportDisabled}
-              className={`${btnGhost} disabled:opacity-40 disabled:cursor-not-allowed`}
-            >
-              PNG
-            </button>
-            <button
-              type="button"
-              onClick={onExportPdf}
-              disabled={exportDisabled}
-              className={`${btnGhost} disabled:opacity-40 disabled:cursor-not-allowed`}
-            >
-              PDF
-            </button>
-          </>
-        )}
-
-        <button
-          type="button"
-          onClick={onExportJson}
-          disabled={exportDisabled}
-          className={`${btnGhost} disabled:opacity-40 disabled:cursor-not-allowed`}
-        >
-          JSON
-        </button>
+          {exportOpen && (
+            <div className="absolute right-0 top-full mt-1 z-50 min-w-[110px] rounded-xl border border-neutral-200 dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800 shadow-lg py-1 overflow-hidden">
+              {view === 'gantt' && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => { onExportPng(); setExportOpen(false); }}
+                    className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                  >
+                    PNG
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { onExportPdf(); setExportOpen(false); }}
+                    className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                  >
+                    PDF
+                  </button>
+                </>
+              )}
+              <button
+                type="button"
+                onClick={() => { onExportJson(); setExportOpen(false); }}
+                className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+              >
+                JSON
+              </button>
+            </div>
+          )}
+        </div>
 
       </div>
     </div>
