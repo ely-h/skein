@@ -138,8 +138,7 @@ export function useTaskDrag(
       setIsGroupDragging(true);
     }
 
-    const container = scrollRef.current;
-    initialScrollRef.current = container?.scrollLeft ?? 0;
+    initialScrollRef.current = scrollRef.current?.scrollLeft ?? 0;
     scrollDeltaRef.current   = 0;
     latestDeltaRef.current   = { x: 0, y: 0 };
 
@@ -148,24 +147,7 @@ export function useTaskDrag(
       pointerXRef.current = e.clientX;
     }
     window.addEventListener('pointermove', onPointerMove);
-
-    // Verrouille tout scroll natif du conteneur pendant le drag (le browser scroll
-    // parfois en suivant l'élément transformé par dnd-kit, ce qui désynchronise delta.x).
-    // Seul notre RAF peut modifier scrollLeft.
-    function onContainerScroll(): void {
-      const c = scrollRef.current;
-      if (!c) return;
-      const expected = Math.round(initialScrollRef.current + scrollDeltaRef.current);
-      if (Math.round(c.scrollLeft) !== expected) {
-        c.scrollLeft = expected;
-      }
-    }
-    container?.addEventListener('scroll', onContainerScroll);
-
-    pointerMoveCleanupRef.current = () => {
-      window.removeEventListener('pointermove', onPointerMove);
-      container?.removeEventListener('scroll', onContainerScroll);
-    };
+    pointerMoveCleanupRef.current = () => window.removeEventListener('pointermove', onPointerMove);
 
     stateRef.current = {
       taskId:        parsed.taskId,
@@ -201,6 +183,8 @@ export function useTaskDrag(
     }
 
     if (o.axis === 'horizontal') {
+      // Lit le scrollLeft réel pour corriger delta.x quelle que soit la source du scroll
+      scrollDeltaRef.current = (scrollRef.current?.scrollLeft ?? initialScrollRef.current) - initialScrollRef.current;
       applyHorizontalMove(delta, scrollDeltaRef.current);
       // startAutoScroll(); // désactivé
 
