@@ -71,6 +71,11 @@ interface Project {
 - [x] v2/08. Bornes auto-extensibles : drag/resize d'une tâche hors des bornes manuelles → timelineStart/End mis à jour en store avec padding (7j avant, 14j après).
 - [x] v2/09. Réordonnage vertical : poignée dans la colonne des noms, drag vertical dnd-kit, champ `order` mis à jour dans le store, sans interférence avec le drag horizontal.
 
+## V3 — PWA & partage
+
+- [x] v3/05. Partage par URL : encode le projet en base64 dans l'URL, vue Gantt lecture seule sur `/share`.
+- [x] v3/06. PWA : `vite-plugin-pwa`, service worker Workbox (cache offline complet, app shell + assets), manifest (icônes PNG multi-tailles, nom "Skein", thème vert menthe `#10b981`), installable desktop + mobile, routing SPA préservé.
+
 ## Esthétique
 - Épuré, sobre, moderne. Coins ni trop sharp ni trop arrondis (radius ~6-8px).
 - Accent : vert menthe. États tâches : gris clair / baby blue / vert menthe.
