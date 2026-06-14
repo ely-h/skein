@@ -69,6 +69,7 @@ interface Project {
 - [x] v2/06. Export dropdown : bouton unique "Exporter" avec menu PNG / PDF / JSON, fermeture au clic extérieur.
 - [x] v2/07. Sélection multiple : clic/Shift+clic/Ctrl+clic, highlight visuel, déplacement groupé du même delta, Échap désélectionne.
 - [x] v2/08. Bornes auto-extensibles : drag/resize d'une tâche hors des bornes manuelles → timelineStart/End mis à jour en store avec padding (7j avant, 14j après).
+- [x] v2/09. Réordonnage vertical : poignée dans la colonne des noms, drag vertical dnd-kit, champ `order` mis à jour dans le store, sans interférence avec le drag horizontal.
 
 ## Esthétique
 - Épuré, sobre, moderne. Coins ni trop sharp ni trop arrondis (radius ~6-8px).

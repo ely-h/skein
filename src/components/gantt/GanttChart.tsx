@@ -1,5 +1,7 @@
 import { useRef, useEffect, useMemo, useState, useCallback, forwardRef } from 'react';
-import { DndContext } from '@dnd-kit/core';
+import { DndContext, closestCenter } from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { useProjectStore } from '../../store/projectStore';
 import { useTaskStore } from '../../store/taskStore';
 import type { TimelineConfig } from '../../lib/timeline';
@@ -28,9 +30,10 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
 ) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const tasks           = useTaskStore((s) => s.tasks);
-  const projects        = useProjectStore((s) => s.projects);
-  const activeProjectId = useProjectStore((s) => s.activeProjectId);
+  const tasks            = useTaskStore((s) => s.tasks);
+  const reorderTasks     = useTaskStore((s) => s.reorderTasks);
+  const projects         = useProjectStore((s) => s.projects);
+  const activeProjectId  = useProjectStore((s) => s.activeProjectId);
   const setTimelineRange = useProjectStore((s) => s.setTimelineRange);
 
   // ── Sélection multiple ───────────────────────────────────────────────────────
@@ -100,7 +103,19 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
   }, [result, onDragCreate, clearResult]);
 
   // Move / resize des barres existantes via dnd-kit.
-  const { sensors, onDragStart, onDragMove, onDragEnd, isGroupDragging } = useTaskDrag(config, selectedIds);
+  const { sensors, onDragStart, onDragMove, onDragEnd: taskDragEnd, isGroupDragging } = useTaskDrag(config, selectedIds);
+
+  // Gère la fin d'un drag : tri vertical OU nettoyage drag barre (les deux se combinent).
+  const handleDragEnd = useCallback((event: DragEndEvent): void => {
+    taskDragEnd();
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = sortedTasks.findIndex((t) => t.id === String(active.id));
+    const newIndex  = sortedTasks.findIndex((t) => t.id === String(over.id));
+    if (oldIndex !== -1 && newIndex !== -1) {
+      reorderTasks(arrayMove(sortedTasks, oldIndex, newIndex).map((t) => t.id));
+    }
+  }, [taskDragEnd, sortedTasks, reorderTasks]);
 
   const gridRows = Math.max(sortedTasks.length, 3);
 
@@ -122,47 +137,50 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
           <GanttHeader config={config} zoom={zoom} onDayWidthChange={onDayWidthChange} />
         </div>
 
-        {/* Corps — drag-create + move/resize via DndContext */}
+        {/* Corps — drag-create + move/resize + tri vertical via DndContext */}
         <DndContext
           sensors={sensors}
+          collisionDetection={closestCenter}
           onDragStart={onDragStart}
           onDragMove={onDragMove}
-          onDragEnd={onDragEnd}
+          onDragEnd={handleDragEnd}
         >
-          <div
-            className="relative cursor-crosshair"
-            style={{ minHeight: gridRows * ROW_H }}
-            onMouseDown={onMouseDown}
-            onClick={() => setSelectedIds(new Set())}
-          >
-            <GanttGrid config={config} zoom={zoom} rowCount={gridRows} />
+          <SortableContext items={sortedTasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+            <div
+              className="relative cursor-crosshair"
+              style={{ minHeight: gridRows * ROW_H }}
+              onMouseDown={onMouseDown}
+              onClick={() => setSelectedIds(new Set())}
+            >
+              <GanttGrid config={config} zoom={zoom} rowCount={gridRows} />
 
-            {sortedTasks.length > 0 ? (
-              sortedTasks.map((task) => (
-                <TaskRow
-                  key={task.id}
-                  task={task}
-                  config={config}
-                  onEdit={onEditTask}
-                  isSelected={selectedIds.has(task.id)}
-                  isInGroupDrag={isGroupDragging && selectedIds.has(task.id)}
-                  onSelect={handleSelect}
+              {sortedTasks.length > 0 ? (
+                sortedTasks.map((task) => (
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    config={config}
+                    onEdit={onEditTask}
+                    isSelected={selectedIds.has(task.id)}
+                    isInGroupDrag={isGroupDragging && selectedIds.has(task.id)}
+                    onSelect={handleSelect}
+                  />
+                ))
+              ) : (
+                <div className="flex items-center justify-center h-32 text-sm text-neutral-400 pointer-events-none">
+                  Tirez sur la grille pour créer une tâche
+                </div>
+              )}
+
+              {/* Aperçu drag-create */}
+              {preview && (
+                <div
+                  className="absolute top-0 z-[8] pointer-events-none rounded-sm bg-emerald-400/25 border-x border-emerald-500/50"
+                  style={{ left: LABEL_W + preview.x, width: preview.width, height: '100%' }}
                 />
-              ))
-            ) : (
-              <div className="flex items-center justify-center h-32 text-sm text-neutral-400 pointer-events-none">
-                Tirez sur la grille pour créer une tâche
-              </div>
-            )}
-
-            {/* Aperçu drag-create */}
-            {preview && (
-              <div
-                className="absolute top-0 z-[8] pointer-events-none rounded-sm bg-emerald-400/25 border-x border-emerald-500/50"
-                style={{ left: LABEL_W + preview.x, width: preview.width, height: '100%' }}
-              />
-            )}
-          </div>
+              )}
+            </div>
+          </SortableContext>
         </DndContext>
 
       </div>
