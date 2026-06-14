@@ -37,7 +37,7 @@ function MoonIcon() {
 }
 
 const DIVIDER = (
-  <div className="w-px h-4 bg-neutral-200 dark:bg-neutral-700 flex-none" />
+  <div className="w-px h-4 bg-[#E8E6E1] dark:bg-neutral-700 flex-none" />
 );
 
 interface Props {
@@ -98,11 +98,11 @@ export default function Toolbar({
   }, [exportOpen]);
 
   const btnBase  = 'px-3 py-1 text-xs font-medium rounded-xl transition-colors';
-  const btnGhost = `${btnBase} text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700`;
-  const btnIcon  = 'p-1.5 rounded-xl transition-colors text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-100';
+  const btnGhost = `${btnBase} text-neutral-600 dark:text-neutral-400 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700`;
+  const btnIcon  = 'p-1.5 rounded-xl transition-colors text-neutral-500 dark:text-neutral-400 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-100';
 
   return (
-    <div className="flex-none flex items-center gap-2 px-4 py-2 border-b border-neutral-200 dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800">
+    <div className="flex-none flex items-center gap-2 px-4 py-2 border-b border-[#E8E6E1] dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800">
 
       {/* Sélecteur de vue : Gantt / Liste */}
       <div className="flex items-center gap-1">
@@ -115,7 +115,7 @@ export default function Toolbar({
               btnBase,
               view === v
                 ? 'bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900'
-                : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700',
+                : 'text-neutral-600 dark:text-neutral-400 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700',
             ].join(' ')}
           >
             {VIEW_LABELS[v]}
@@ -138,7 +138,7 @@ export default function Toolbar({
                   btnBase,
                   zoom === z
                     ? 'bg-emerald-500 text-white'
-                    : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700',
+                    : 'text-neutral-600 dark:text-neutral-400 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700',
                 ].join(' ')}
               >
                 {ZOOM_LABELS[z]}
@@ -177,7 +177,7 @@ export default function Toolbar({
             onChange={(e) =>
               onTimelineRangeChange(e.target.value || null, timelineEnd)
             }
-            className="text-xs px-2 py-1 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+            className="text-xs px-2 py-1 rounded-xl border border-[#E8E6E1] dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
           />
           <span className="text-xs text-neutral-400 dark:text-neutral-500 select-none">→</span>
           <input
@@ -187,14 +187,14 @@ export default function Toolbar({
             onChange={(e) =>
               onTimelineRangeChange(timelineStart, e.target.value || null)
             }
-            className="text-xs px-2 py-1 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+            className="text-xs px-2 py-1 rounded-xl border border-[#E8E6E1] dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
           />
           {(timelineStart !== null || timelineEnd !== null) && (
             <button
               type="button"
               title="Réinitialiser la plage automatiquement"
               onClick={() => onTimelineRangeChange(null, null)}
-              className="text-xs px-1.5 py-1 rounded-xl text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+              className="text-xs px-1.5 py-1 rounded-xl text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700 transition-colors"
             >
               ↺
             </button>
@@ -239,20 +239,20 @@ export default function Toolbar({
           </button>
 
           {exportOpen && (
-            <div className="absolute right-0 top-full mt-1 z-50 min-w-[110px] rounded-xl border border-neutral-200 dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800 shadow-lg py-1 overflow-hidden">
+            <div className="absolute right-0 top-full mt-1 z-50 min-w-[110px] rounded-xl border border-[#E8E6E1] dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800 shadow-lg py-1 overflow-hidden">
               {view === 'gantt' && (
                 <>
                   <button
                     type="button"
                     onClick={() => { onExportPng(); setExportOpen(false); }}
-                    className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                    className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700 transition-colors"
                   >
                     PNG
                   </button>
                   <button
                     type="button"
                     onClick={() => { onExportPdf(); setExportOpen(false); }}
-                    className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                    className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700 transition-colors"
                   >
                     PDF
                   </button>
@@ -261,7 +261,7 @@ export default function Toolbar({
               <button
                 type="button"
                 onClick={() => { onExportJson(); setExportOpen(false); }}
-                className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700 transition-colors"
               >
                 JSON
               </button>

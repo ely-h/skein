@@ -27,7 +27,7 @@ function StatusIcon({ status }: { status: TaskStatus }) {
     );
   }
   return (
-    <div className="w-4 h-4 rounded-full border-2 border-neutral-300 dark:border-neutral-600 flex-none" />
+    <div className="w-4 h-4 rounded-full border-2 border-[#D4D0CA] dark:border-neutral-600 flex-none" />
   );
 }
 
@@ -66,7 +66,7 @@ export default function TaskListItem({ task, onEdit }: Props) {
   }
 
   return (
-    <li className="group flex items-center gap-3 px-6 py-2.5 border-b border-neutral-100 dark:border-neutral-700/60 hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors">
+    <li className="group flex items-center gap-3 px-6 py-2.5 border-b border-[#EDEBE5] dark:border-neutral-700/60 hover:bg-[#F0EDE8] dark:hover:bg-neutral-800/40 transition-colors">
 
       {/* Icône de statut (cycle au clic) */}
       <button
@@ -117,7 +117,7 @@ export default function TaskListItem({ task, onEdit }: Props) {
         type="button"
         onClick={() => onEdit(task.id)}
         title="Modifier"
-        className="flex-none opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-opacity"
+        className="flex-none opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-[#E8E6E1] dark:hover:bg-neutral-700 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-opacity"
       >
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />

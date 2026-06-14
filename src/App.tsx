@@ -163,7 +163,7 @@ export default function App() {
 
   return (
     <div className="h-screen flex flex-col bg-[#F8F7F4] dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100">
-      <header className="flex-none flex items-center justify-between px-6 h-12 border-b border-neutral-200 dark:border-neutral-700 shrink-0">
+      <header className="flex-none flex items-center justify-between px-6 h-12 border-b border-[#E8E6E1] dark:border-neutral-700 shrink-0">
         <h1 className="text-base font-semibold tracking-tight">Skein</h1>
         <button
           type="button"

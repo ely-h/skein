@@ -62,10 +62,10 @@ export default function TaskRow({ task, config, onEdit, isSelected, isInGroupDra
     <div
       ref={setNodeRef}
       className={[
-        'group flex border-b border-neutral-100 dark:border-neutral-700/60 transition-colors',
+        'group flex border-b border-[#EDEBE5] dark:border-neutral-700/60 transition-colors',
         isSelected
           ? 'bg-emerald-50/50 dark:bg-emerald-950/20 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
-          : 'hover:bg-neutral-50/60 dark:hover:bg-neutral-800/40',
+          : 'hover:bg-[#F0EDE8]/60 dark:hover:bg-neutral-800/40',
         isDragging ? 'opacity-60 shadow-md' : '',
       ].join(' ')}
       style={{
@@ -82,10 +82,10 @@ export default function TaskRow({ task, config, onEdit, isSelected, isInGroupDra
       {/* Étiquette — reste visible lors du scroll horizontal */}
       <div
         className={[
-          'sticky left-0 z-10 flex-none flex items-center gap-1.5 px-2 border-r border-neutral-200 dark:border-neutral-700 transition-colors cursor-default',
+          'sticky left-0 z-10 flex-none flex items-center gap-1.5 px-2 border-r border-[#E8E6E1] dark:border-neutral-700 transition-colors cursor-default',
           isSelected
             ? 'bg-emerald-50 dark:bg-emerald-950/30 group-hover:bg-emerald-100/70 dark:group-hover:bg-emerald-950/40'
-            : 'bg-[#F8F7F4] dark:bg-neutral-800 group-hover:bg-neutral-100 dark:group-hover:bg-neutral-800',
+            : 'bg-[#F8F7F4] dark:bg-neutral-800 group-hover:bg-[#EDE9E3] dark:group-hover:bg-neutral-800',
         ].join(' ')}
         data-no-drag=""
         style={{ width: LABEL_W }}
@@ -110,7 +110,7 @@ export default function TaskRow({ task, config, onEdit, isSelected, isInGroupDra
 
         <button
           type="button"
-          className="flex-none p-1 rounded-xl opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-all duration-150"
+          className="flex-none p-1 rounded-xl opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700 transition-all duration-150"
           onClick={(e) => { e.stopPropagation(); onEdit(task.id); }}
           title="Modifier"
         >
