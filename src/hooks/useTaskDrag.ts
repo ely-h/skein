@@ -3,7 +3,7 @@ import { useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import type { DragStartEvent, DragMoveEvent } from '@dnd-kit/core';
 import type { RefObject } from 'react';
 import type { TimelineConfig } from '../lib/timeline';
-import { LABEL_W } from '../components/gantt/constants';
+// import { LABEL_W } from '../components/gantt/constants'; // désactivé
 import { useTaskStore } from '../store/taskStore';
 import { useProjectStore } from '../store/projectStore';
 import { useHistoryStore } from '../store/historyStore';
@@ -12,8 +12,8 @@ import { ROW_H } from '../components/gantt/constants';
 import type { Task } from '../types/index';
 
 const AXIS_THRESHOLD = 8;
-const SCROLL_ZONE    = 60;  // px depuis le bord gauche/droit pour déclencher l'auto-scroll
-const MAX_SPEED      = 12;  // px par frame (~720 px/s à 60 fps)
+// const SCROLL_ZONE = 60;  // désactivé
+// const MAX_SPEED   = 12;  // désactivé
 
 type DragType = 'move' | 'resize-left' | 'resize-right';
 type DragAxis = 'undecided' | 'horizontal' | 'vertical';
@@ -108,43 +108,10 @@ export function useTaskDrag(
     }
   }, []);
 
-  const startAutoScroll = useCallback((): void => {
-    if (rafRef.current !== null) return; // déjà actif
+  // DEBUG : auto-scroll désactivé pour isoler le comportement du drag seul
+  const startAutoScroll = useCallback((): void => { /* désactivé */ }, []);
 
-    function tick(): void {
-      const container = scrollRef.current;
-      if (!container || !stateRef.current) {
-        rafRef.current = null;
-        return;
-      }
-
-      const rect   = container.getBoundingClientRect();
-      const relX   = pointerXRef.current - rect.left - LABEL_W;
-      const innerW = rect.width - LABEL_W;
-
-      // relX < 0 = souris dans la sidebar (hors conteneur) : pas de scroll
-      let speed = 0;
-      if (relX >= 0 && relX < SCROLL_ZONE) {
-        speed = -MAX_SPEED * (1 - relX / SCROLL_ZONE);
-      } else if (relX > innerW - SCROLL_ZONE && relX <= innerW) {
-        const fromRight = innerW - relX;
-        speed = MAX_SPEED * (1 - fromRight / SCROLL_ZONE);
-      }
-
-      if (speed !== 0) {
-        container.scrollLeft  += speed;
-        scrollDeltaRef.current = container.scrollLeft - initialScrollRef.current;
-        applyHorizontalMove(latestDeltaRef.current, scrollDeltaRef.current);
-        // Relance uniquement si on scroll effectivement — s'arrête sinon,
-        // et redémarre au prochain onDragMove via startAutoScroll().
-        rafRef.current = requestAnimationFrame(tick);
-      } else {
-        rafRef.current = null;
-      }
-    }
-
-    rafRef.current = requestAnimationFrame(tick);
-  }, [scrollRef, applyHorizontalMove]);
+  const _tick = (): void => { /* désactivé */ }; void _tick;
 
   const onDragStart = useCallback(({ active }: DragStartEvent): void => {
     const parsed = parseDragId(String(active.id));
@@ -206,7 +173,7 @@ export function useTaskDrag(
       if (absY >= AXIS_THRESHOLD && absY > absX) {
         o.axis = 'vertical';
         setIsVerticalDragging(true);
-        stopAutoScroll();
+        // stopAutoScroll(); // désactivé
         return;
       } else if (absX >= AXIS_THRESHOLD) {
         o.axis = 'horizontal';
@@ -217,7 +184,7 @@ export function useTaskDrag(
 
     if (o.axis === 'horizontal') {
       applyHorizontalMove(delta, scrollDeltaRef.current);
-      startAutoScroll();
+      // startAutoScroll(); // désactivé
 
     } else if (o.axis === 'vertical') {
       const tasks      = useTaskStore.getState().tasks;
@@ -234,7 +201,7 @@ export function useTaskDrag(
   }, [applyHorizontalMove, startAutoScroll, stopAutoScroll]);
 
   const onDragEnd = useCallback((): void => {
-    stopAutoScroll();
+    // stopAutoScroll(); // désactivé
     pointerMoveCleanupRef.current?.();
     pointerMoveCleanupRef.current = null;
 
