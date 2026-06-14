@@ -1,30 +1,14 @@
 import { useRef, useMemo } from 'react';
-import type { Project, Task, TaskStatus } from '../../types/index';
+import type { Project, Task } from '../../types/index';
 import type { TimelineConfig } from '../../lib/timeline';
 import { resolveTimelineBounds, taskToBar } from '../../lib/timeline';
 import { LABEL_W, HEADER_WEEK_H, HEADER_DAY_H, ROW_H, ZOOM_CONFIGS } from './constants';
 import GanttHeader from './GanttHeader';
 import GanttGrid from './GanttGrid';
+import { useThemeStore } from '../../store/themeStore';
+import { contrastColor } from '../../lib/color';
 
 const HEADER_H = HEADER_WEEK_H + HEADER_DAY_H;
-
-const STATUS_BG: Record<TaskStatus, string> = {
-  not_started: 'bg-neutral-300 dark:bg-neutral-500',
-  in_progress: 'bg-sky-400 dark:bg-sky-500',
-  done:        'bg-emerald-400 dark:bg-emerald-500',
-};
-
-const STATUS_TEXT: Record<TaskStatus, string> = {
-  not_started: 'text-neutral-600 dark:text-neutral-200',
-  in_progress: 'text-white',
-  done:        'text-white',
-};
-
-const STATUS_DOT: Record<TaskStatus, string> = {
-  not_started: 'bg-neutral-300 dark:bg-neutral-500',
-  in_progress: 'bg-sky-400 dark:bg-sky-500',
-  done:        'bg-emerald-400 dark:bg-emerald-500',
-};
 
 const MIN_BAR_LABEL_W = 48;
 
@@ -32,18 +16,21 @@ function ReadOnlyBar({ task, config }: {
   task: Task & { startDate: string; endDate: string };
   config: TimelineConfig;
 }) {
+  const statusColors = useThemeStore((s) => s.statusColors);
+  const bgColor      = statusColors[task.status];
+  const textColor    = contrastColor(bgColor);
   const { x, width } = taskToBar(task, config);
   return (
     <div
-      className={`absolute top-1/2 -translate-y-1/2 h-7 rounded-md overflow-hidden ${STATUS_BG[task.status]}`}
-      style={{ left: x, width }}
+      className="absolute top-1/2 -translate-y-1/2 h-7 rounded-md overflow-hidden"
+      style={{ left: x, width, backgroundColor: bgColor }}
       title={task.name}
     >
       {width >= MIN_BAR_LABEL_W && (
-        <span className={[
-          'absolute inset-x-3 inset-y-0 flex items-center text-[11px] font-medium truncate pointer-events-none select-none',
-          STATUS_TEXT[task.status],
-        ].join(' ')}>
+        <span
+          className="absolute inset-x-3 inset-y-0 flex items-center text-[11px] font-medium truncate pointer-events-none select-none"
+          style={{ color: textColor }}
+        >
           {task.name}
         </span>
       )}
@@ -56,7 +43,8 @@ interface Props {
 }
 
 export default function ReadOnlyGanttView({ project }: Props) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRef    = useRef<HTMLDivElement>(null);
+  const statusColors = useThemeStore((s) => s.statusColors);
 
   const sortedTasks = [...project.tasks].sort((a, b) => a.order - b.order);
 
@@ -106,7 +94,10 @@ export default function ReadOnlyGanttView({ project }: Props) {
                 className="sticky left-0 z-10 flex-none flex items-center gap-2 px-4 bg-[#F8F7F4] dark:bg-neutral-800 border-r border-[#E8E6E1] dark:border-neutral-700"
                 style={{ width: LABEL_W }}
               >
-                <div className={`flex-none w-1.5 h-1.5 rounded-full ${STATUS_DOT[task.status]}`} />
+                <div
+                  className="flex-none w-1.5 h-1.5 rounded-full"
+                  style={{ backgroundColor: statusColors[task.status] }}
+                />
                 <span className="truncate text-sm text-neutral-700 dark:text-neutral-300">
                   {task.name}
                 </span>
