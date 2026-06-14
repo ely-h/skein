@@ -173,13 +173,13 @@ export default function GanttHeader({ config, zoom, onDayWidthChange }: Props) {
 
       {/* Ligne supérieure : semaines / mois / années */}
       <div
-        className="flex border-b border-neutral-200 dark:border-neutral-700"
+        className="flex border-b border-[#E8E6E1] dark:border-neutral-700"
         style={{ height: HEADER_WEEK_H }}
       >
         {row1.map((cell) => (
           <div
             key={cell.key}
-            className="flex-none flex items-center px-2 text-xs font-medium text-neutral-500 dark:text-neutral-400 border-r border-neutral-200 dark:border-neutral-700 overflow-hidden"
+            className="flex-none flex items-center px-2 text-xs font-medium text-neutral-500 dark:text-neutral-400 border-r border-[#E8E6E1] dark:border-neutral-700 overflow-hidden"
             style={{ width: cell.widthPx }}
           >
             {cell.label}
@@ -194,9 +194,9 @@ export default function GanttHeader({ config, zoom, onDayWidthChange }: Props) {
             key={cell.key}
             className={[
               'relative flex-none flex items-center justify-center text-xs overflow-hidden',
-              'border-r border-neutral-200 dark:border-neutral-700',
+              'border-r border-[#E8E6E1] dark:border-neutral-700',
               cell.isWeekend
-                ? 'text-neutral-400 dark:text-neutral-600 bg-neutral-50 dark:bg-neutral-900'
+                ? 'text-neutral-400 dark:text-neutral-600 bg-[#F0EDE8] dark:bg-neutral-900'
                 : 'text-neutral-600 dark:text-neutral-400',
             ].join(' ')}
             style={{ width: cell.widthPx }}
