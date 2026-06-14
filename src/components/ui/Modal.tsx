@@ -17,7 +17,7 @@ export default function Modal({ onClose, children }: Props) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]"
+      className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]"
       onClick={onClose}
     >
       <div

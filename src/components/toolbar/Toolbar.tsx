@@ -238,35 +238,41 @@ export default function Toolbar({
             </svg>
           </button>
 
-          {exportOpen && (
-            <div className="absolute right-0 top-full mt-1 z-50 min-w-[110px] rounded-xl border border-[#E8E6E1] dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800 shadow-lg py-1 overflow-hidden">
-              {view === 'gantt' && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => { onExportPng(); setExportOpen(false); }}
-                    className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700 transition-colors"
-                  >
-                    PNG
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { onExportPdf(); setExportOpen(false); }}
-                    className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700 transition-colors"
-                  >
-                    PDF
-                  </button>
-                </>
-              )}
-              <button
-                type="button"
-                onClick={() => { onExportJson(); setExportOpen(false); }}
-                className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700 transition-colors"
-              >
-                JSON
-              </button>
-            </div>
-          )}
+          <div
+            className={[
+              'absolute right-0 top-full mt-1 z-50 min-w-[110px] rounded-xl border border-[#E8E6E1] dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800 shadow-lg py-1 overflow-hidden',
+              'transition-all duration-150 ease-out origin-top-right',
+              exportOpen
+                ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
+                : 'opacity-0 scale-95 -translate-y-1 pointer-events-none',
+            ].join(' ')}
+          >
+            {view === 'gantt' && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => { onExportPng(); setExportOpen(false); }}
+                  className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700 transition-colors"
+                >
+                  PNG
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { onExportPdf(); setExportOpen(false); }}
+                  className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700 transition-colors"
+                >
+                  PDF
+                </button>
+              </>
+            )}
+            <button
+              type="button"
+              onClick={() => { onExportJson(); setExportOpen(false); }}
+              className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700 transition-colors"
+            >
+              JSON
+            </button>
+          </div>
         </div>
 
       </div>
