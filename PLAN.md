@@ -75,6 +75,7 @@ interface Project {
 
 - [x] v3/05. Partage par URL : encode le projet en base64 dans l'URL, vue Gantt lecture seule sur `/share`.
 - [x] v3/06. PWA : `vite-plugin-pwa`, service worker Workbox (cache offline complet, app shell + assets), manifest (icônes PNG multi-tailles, nom "Skein", thème vert menthe `#10b981`), installable desktop + mobile, routing SPA préservé.
+- [x] v3/07. Palette de couleurs : panneau dropdown dans la Toolbar (icône palette), trois color pickers un par statut, couleurs persistées dans `store/themeStore.ts` (localStorage `skein-status-colors`), appliquées instantanément aux barres Gantt, icônes de statut en vue Liste et vue lecture seule. Couleurs par défaut : gris clair / baby blue / vert menthe.
 
 ## Esthétique
 - Épuré, sobre, moderne. Coins ni trop sharp ni trop arrondis (radius ~6-8px).

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import type { ZoomLevel, ViewMode } from '../../types/index';
+import ColorPalettePanel from './ColorPalettePanel';
 
 const ZOOM_LABELS: Record<ZoomLevel, string> = {
   day:   'Jour',
@@ -217,6 +218,9 @@ export default function Toolbar({
         >
           {dark ? <SunIcon /> : <MoonIcon />}
         </button>
+
+        {/* Palette de couleurs */}
+        <ColorPalettePanel />
 
         {DIVIDER}
 
