@@ -134,11 +134,13 @@ export function useTaskDrag(
       if (speed !== 0) {
         container.scrollLeft  += speed;
         scrollDeltaRef.current = container.scrollLeft - initialScrollRef.current;
-        // Met à jour la barre sans attendre le prochain pointermove
         applyHorizontalMove(latestDeltaRef.current, scrollDeltaRef.current);
+        // Relance uniquement si on scroll effectivement — s'arrête sinon,
+        // et redémarre au prochain onDragMove via startAutoScroll().
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        rafRef.current = null;
       }
-
-      rafRef.current = requestAnimationFrame(tick);
     }
 
     rafRef.current = requestAnimationFrame(tick);
