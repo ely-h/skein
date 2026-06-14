@@ -121,12 +121,13 @@ export function useTaskDrag(
       const relX   = pointerXRef.current - rect.left;
       const innerW = rect.width;
 
+      // relX < 0 = souris dans la sidebar (hors conteneur) : pas de scroll
       let speed = 0;
-      if (relX < SCROLL_ZONE) {
-        speed = -MAX_SPEED * (1 - Math.max(0, relX) / SCROLL_ZONE);
-      } else if (relX > innerW - SCROLL_ZONE) {
+      if (relX >= 0 && relX < SCROLL_ZONE) {
+        speed = -MAX_SPEED * (1 - relX / SCROLL_ZONE);
+      } else if (relX > innerW - SCROLL_ZONE && relX <= innerW) {
         const fromRight = innerW - relX;
-        speed = MAX_SPEED * (1 - Math.max(0, fromRight) / SCROLL_ZONE);
+        speed = MAX_SPEED * (1 - fromRight / SCROLL_ZONE);
       }
 
       if (speed !== 0) {
