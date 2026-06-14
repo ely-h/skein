@@ -138,7 +138,8 @@ export function useTaskDrag(
       setIsGroupDragging(true);
     }
 
-    initialScrollRef.current = scrollRef.current?.scrollLeft ?? 0;
+    const container = scrollRef.current;
+    initialScrollRef.current = container?.scrollLeft ?? 0;
     scrollDeltaRef.current   = 0;
     latestDeltaRef.current   = { x: 0, y: 0 };
 
@@ -147,7 +148,24 @@ export function useTaskDrag(
       pointerXRef.current = e.clientX;
     }
     window.addEventListener('pointermove', onPointerMove);
-    pointerMoveCleanupRef.current = () => window.removeEventListener('pointermove', onPointerMove);
+
+    // Verrouille tout scroll natif du conteneur pendant le drag (le browser scroll
+    // parfois en suivant l'élément transformé par dnd-kit, ce qui désynchronise delta.x).
+    // Seul notre RAF peut modifier scrollLeft.
+    function onContainerScroll(): void {
+      const c = scrollRef.current;
+      if (!c) return;
+      const expected = Math.round(initialScrollRef.current + scrollDeltaRef.current);
+      if (Math.round(c.scrollLeft) !== expected) {
+        c.scrollLeft = expected;
+      }
+    }
+    container?.addEventListener('scroll', onContainerScroll);
+
+    pointerMoveCleanupRef.current = () => {
+      window.removeEventListener('pointermove', onPointerMove);
+      container?.removeEventListener('scroll', onContainerScroll);
+    };
 
     stateRef.current = {
       taskId:        parsed.taskId,
