@@ -102,12 +102,32 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
     clearResult();
   }, [result, onDragCreate, clearResult]);
 
-  // Move / resize des barres existantes via dnd-kit.
-  const { sensors, onDragStart, onDragMove, onDragEnd: taskDragEnd, isGroupDragging } = useTaskDrag(config, selectedIds);
+  // Move / resize / tri vertical des barres existantes via dnd-kit.
+  const {
+    sensors,
+    onDragStart,
+    onDragMove,
+    onDragEnd:          taskDragEnd,
+    isGroupDragging,
+    isVerticalDragging,
+    verticalTargetIndex,
+    popVerticalReorder,
+  } = useTaskDrag(config, selectedIds);
 
-  // Gère la fin d'un drag : tri vertical OU nettoyage drag barre (les deux se combinent).
+  // Gère la fin d'un drag : tri vertical barre OU tri grip poignée OU nettoyage.
   const handleDragEnd = useCallback((event: DragEndEvent): void => {
-    taskDragEnd();
+    taskDragEnd(); // commit le pendingReorder interne si drag vertical
+    const vertReorder = popVerticalReorder();
+
+    if (vertReorder) {
+      const oldIndex = sortedTasks.findIndex((t) => t.id === vertReorder.taskId);
+      if (oldIndex !== -1) {
+        reorderTasks(arrayMove(sortedTasks, oldIndex, vertReorder.targetIndex).map((t) => t.id));
+      }
+      return;
+    }
+
+    // Tri via poignée (active.id = UUID nu, dans SortableContext)
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     const oldIndex = sortedTasks.findIndex((t) => t.id === String(active.id));
@@ -115,7 +135,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
     if (oldIndex !== -1 && newIndex !== -1) {
       reorderTasks(arrayMove(sortedTasks, oldIndex, newIndex).map((t) => t.id));
     }
-  }, [taskDragEnd, sortedTasks, reorderTasks]);
+  }, [taskDragEnd, popVerticalReorder, sortedTasks, reorderTasks]);
 
   const gridRows = Math.max(sortedTasks.length, 3);
 
@@ -177,6 +197,14 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
                 <div
                   className="absolute top-0 z-[8] pointer-events-none rounded-sm bg-emerald-400/25 border-x border-emerald-500/50"
                   style={{ left: LABEL_W + preview.x, width: preview.width, height: '100%' }}
+                />
+              )}
+
+              {/* Indicateur de dépôt — drag vertical d'une barre */}
+              {isVerticalDragging && verticalTargetIndex !== null && (
+                <div
+                  className="absolute left-0 right-0 h-0.5 bg-[#4a7c6a] z-30 pointer-events-none"
+                  style={{ top: verticalTargetIndex * ROW_H }}
                 />
               )}
             </div>
