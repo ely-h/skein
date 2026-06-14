@@ -1,9 +1,11 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useProjectStore } from './store/projectStore';
 import { useTaskStore } from './store/taskStore';
+import { useHistoryStore } from './store/historyStore';
 import { resolveTimelineBounds, DAY_WIDTH_BOUNDS } from './lib/timeline';
 import { ZOOM_CONFIGS } from './components/gantt/constants';
 import { useColumnWidth } from './hooks/useColumnWidth';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import GanttChart from './components/gantt/GanttChart';
 import TaskFormModal from './components/gantt/TaskFormModal';
 import TaskListView from './components/list/TaskListView';
@@ -36,6 +38,7 @@ export default function App() {
   const importProject     = useProjectStore((s) => s.importProject);
   const setTimelineRange  = useProjectStore((s) => s.setTimelineRange);
   const tasks             = useTaskStore((s) => s.tasks);
+  const deleteTask        = useTaskStore((s) => s.deleteTask);
 
   const { dark, toggle: toggleDark } = useDarkMode();
   const { widths, setWidth } = useColumnWidth();
@@ -43,11 +46,13 @@ export default function App() {
   const ganttRef     = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [modalOpen,     setModalOpen]     = useState(false);
-  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
-  const [dragDates,     setDragDates]     = useState<DragDates | null>(null);
-  const [zoom,          setZoom]          = useState<ZoomLevel>('day');
-  const [view,          setView]          = useState<ViewMode>('gantt');
+  const [modalOpen,      setModalOpen]      = useState(false);
+  const [editingTaskId,  setEditingTaskId]  = useState<string | null>(null);
+  const [dragDates,      setDragDates]      = useState<DragDates | null>(null);
+  const [zoom,           setZoom]           = useState<ZoomLevel>('day');
+  const [view,           setView]           = useState<ViewMode>('gantt');
+  const [selectedIds,    setSelectedIds]    = useState<Set<string>>(new Set());
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   // Largeur de colonne pour le zoom courant
   const dayWidth    = widths[zoom];
@@ -81,10 +86,23 @@ export default function App() {
       taskLatestDate,
     };
   }, [tasks, timelineStart, timelineEnd, zoom]);
-  const [isExporting,   setIsExporting]   = useState(false);
-  const [importError,   setImportError]   = useState<string | null>(null);
+
+  const [isExporting,  setIsExporting]  = useState(false);
+  const [importError,  setImportError]  = useState<string | null>(null);
+
+  // Réinitialise sélection + historique lors d'un changement de projet
+  useEffect(() => {
+    setSelectedIds(new Set());
+    setDeleteConfirmId(null);
+    useHistoryStore.getState().reset();
+  }, [activeProjectId]);
 
   useEffect(() => { seedIfEmpty(); }, []);
+
+  const closeModal = useCallback((): void => {
+    setModalOpen(false);
+    setDragDates(null);
+  }, []);
 
   const openNewTask = useCallback((): void => {
     setDragDates(null);
@@ -104,10 +122,33 @@ export default function App() {
     setModalOpen(true);
   }, []);
 
-  const closeModal = useCallback((): void => {
-    setModalOpen(false);
-    setDragDates(null);
+  const handleConfirmDelete = useCallback((): void => {
+    if (!deleteConfirmId) return;
+    deleteTask(deleteConfirmId);
+    setDeleteConfirmId(null);
+    setSelectedIds(new Set());
+  }, [deleteConfirmId, deleteTask]);
+
+  const handleCancelDelete = useCallback((): void => {
+    setDeleteConfirmId(null);
   }, []);
+
+  // Raccourcis clavier — ne s'appliquent que pour une sélection unique
+  const singleSelectedId = selectedIds.size === 1 ? [...selectedIds][0] : null;
+
+  useKeyboardShortcuts({
+    selectedId: singleSelectedId,
+    onUndo:      useCallback(() => useHistoryStore.getState().undo(), []),
+    onRedo:      useCallback(() => useHistoryStore.getState().redo(), []),
+    onEscape:    useCallback((): void => {
+      setSelectedIds(new Set());
+      setDeleteConfirmId(null);
+      closeModal();
+    }, [closeModal]),
+    onDeleteKey: useCallback((): void => {
+      if (singleSelectedId) setDeleteConfirmId(singleSelectedId);
+    }, [singleSelectedId]),
+  });
 
   const handleExportPng = useCallback(async (): Promise<void> => {
     if (!ganttRef.current || !activeProject) return;
@@ -160,6 +201,10 @@ export default function App() {
       setTimeout(() => setImportError(null), 6000);
     }
   }, [importProject]);
+
+  const deleteConfirmTask = deleteConfirmId
+    ? tasks.find((t) => t.id === deleteConfirmId) ?? null
+    : null;
 
   return (
     <div className="h-screen flex flex-col bg-[#F8F7F4] dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100">
@@ -216,6 +261,29 @@ export default function App() {
               </button>
             </div>
           )}
+          {deleteConfirmTask && (
+            <div className="flex items-center justify-between gap-3 px-4 py-2 bg-amber-50 dark:bg-amber-950 border-b border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-xs">
+              <span>
+                Supprimer <strong>{deleteConfirmTask.name}</strong> ? Cette action sera annulable via Ctrl+Z.
+              </span>
+              <div className="flex items-center gap-3 flex-none">
+                <button
+                  type="button"
+                  onClick={handleConfirmDelete}
+                  className="font-medium text-red-600 dark:text-red-400 hover:underline"
+                >
+                  Supprimer
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancelDelete}
+                  className="font-medium hover:underline"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          )}
           {view === 'gantt' ? (
             <GanttChart
               ref={ganttRef}
@@ -224,6 +292,8 @@ export default function App() {
               onDayWidthChange={handleDayWidthChange}
               onEditTask={openEditTask}
               onDragCreate={openDragCreate}
+              selectedIds={selectedIds}
+              onSelectChange={setSelectedIds}
             />
           ) : (
             <TaskListView onEdit={openEditTask} />
