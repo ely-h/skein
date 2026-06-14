@@ -3,6 +3,7 @@ import { useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import type { DragStartEvent, DragMoveEvent } from '@dnd-kit/core';
 import type { RefObject } from 'react';
 import type { TimelineConfig } from '../lib/timeline';
+import { LABEL_W } from '../components/gantt/constants';
 import { useTaskStore } from '../store/taskStore';
 import { useProjectStore } from '../store/projectStore';
 import { useHistoryStore } from '../store/historyStore';
@@ -118,8 +119,8 @@ export function useTaskDrag(
       }
 
       const rect   = container.getBoundingClientRect();
-      const relX   = pointerXRef.current - rect.left;
-      const innerW = rect.width;
+      const relX   = pointerXRef.current - rect.left - LABEL_W;
+      const innerW = rect.width - LABEL_W;
 
       // relX < 0 = souris dans la sidebar (hors conteneur) : pas de scroll
       let speed = 0;
