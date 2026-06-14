@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Task, TaskStatus } from '../types/index';
 import { useProjectStore } from './projectStore';
+import { useHistoryStore } from './historyStore';
 
 export interface TaskInput {
   name: string;
@@ -14,7 +15,8 @@ interface TaskState {
   addTask: (input: TaskInput) => void;
   updateTask: (
     id: string,
-    updates: Partial<Pick<Task, 'name' | 'startDate' | 'endDate' | 'status' | 'parentId'>>
+    updates: Partial<Pick<Task, 'name' | 'startDate' | 'endDate' | 'status' | 'parentId'>>,
+    options?: { record?: boolean }
   ) => void;
   deleteTask: (id: string) => void;
   /** Réorganise les tâches en affectant à chaque tâche l'index de sa position dans orderedIds. */
@@ -44,48 +46,56 @@ export const useTaskStore = create<TaskState>()((set) => {
     addTask(input: TaskInput): void {
       const { activeProjectId, _setProjectTasks } = useProjectStore.getState();
       if (!activeProjectId) return;
-      const current = getActiveTasks();
+      const tasksBefore = getActiveTasks();
       const task: Task = {
         id: crypto.randomUUID(),
         projectId: activeProjectId,
         parentId: null,
-        order: current.length,
+        order: tasksBefore.length,
         ...input,
       };
-      _setProjectTasks(activeProjectId, [...current, task]);
+      const tasksAfter = [...tasksBefore, task];
+      _setProjectTasks(activeProjectId, tasksAfter);
+      useHistoryStore.getState().push(activeProjectId, tasksBefore, tasksAfter);
     },
 
-    updateTask(
-      id: string,
-      updates: Partial<Pick<Task, 'name' | 'startDate' | 'endDate' | 'status' | 'parentId'>>
-    ): void {
+    updateTask(id, updates, options): void {
       const { activeProjectId, _setProjectTasks } = useProjectStore.getState();
       if (!activeProjectId) return;
-      const updated = getActiveTasks().map((t) =>
+      const tasksBefore = getActiveTasks();
+      const tasksAfter  = tasksBefore.map((t) =>
         t.id === id ? { ...t, ...updates } : t
       );
-      _setProjectTasks(activeProjectId, updated);
+      _setProjectTasks(activeProjectId, tasksAfter);
+      // record=true par défaut sauf si l'appelant (drag) opte pour le silence
+      if (options?.record !== false) {
+        useHistoryStore.getState().push(activeProjectId, tasksBefore, tasksAfter);
+      }
     },
 
     deleteTask(id: string): void {
       const { activeProjectId, _setProjectTasks } = useProjectStore.getState();
       if (!activeProjectId) return;
-      const filtered = getActiveTasks().filter((t) => t.id !== id);
-      _setProjectTasks(activeProjectId, filtered);
+      const tasksBefore = getActiveTasks();
+      const tasksAfter  = tasksBefore.filter((t) => t.id !== id);
+      _setProjectTasks(activeProjectId, tasksAfter);
+      useHistoryStore.getState().push(activeProjectId, tasksBefore, tasksAfter);
     },
 
     reorderTasks(orderedIds: string[]): void {
       const { activeProjectId, _setProjectTasks } = useProjectStore.getState();
       if (!activeProjectId) return;
-      const taskMap = new Map(getActiveTasks().map((t) => [t.id, t]));
-      const reordered: Task[] = [];
+      const tasksBefore = getActiveTasks();
+      const taskMap = new Map(tasksBefore.map((t) => [t.id, t]));
+      const tasksAfter: Task[] = [];
       for (const [index, id] of orderedIds.entries()) {
         const task = taskMap.get(id);
         if (task !== undefined) {
-          reordered.push({ ...task, order: index });
+          tasksAfter.push({ ...task, order: index });
         }
       }
-      _setProjectTasks(activeProjectId, reordered);
+      _setProjectTasks(activeProjectId, tasksAfter);
+      useHistoryStore.getState().push(activeProjectId, tasksBefore, tasksAfter);
     },
   };
 });

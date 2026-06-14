@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo, useState, useCallback, forwardRef } from 'react';
+import { useRef, useEffect, useMemo, useCallback, forwardRef } from 'react';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
@@ -17,15 +17,17 @@ import TaskRow from './TaskRow';
 const HEADER_H = HEADER_WEEK_H + HEADER_DAY_H;
 
 interface Props {
-  zoom:              ZoomLevel;
-  dayWidth:          number;
-  onDayWidthChange:  (w: number) => void;
-  onEditTask:        (id: string) => void;
-  onDragCreate:      (startDate: string, endDate: string) => void;
+  zoom:             ZoomLevel;
+  dayWidth:         number;
+  onDayWidthChange: (w: number) => void;
+  onEditTask:       (id: string) => void;
+  onDragCreate:     (startDate: string, endDate: string) => void;
+  selectedIds:      Set<string>;
+  onSelectChange:   (ids: Set<string>) => void;
 }
 
 const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
-  { zoom, dayWidth, onDayWidthChange, onEditTask, onDragCreate },
+  { zoom, dayWidth, onDayWidthChange, onEditTask, onDragCreate, selectedIds, onSelectChange },
   chartRef,
 ) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -36,32 +38,16 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
   const activeProjectId  = useProjectStore((s) => s.activeProjectId);
   const setTimelineRange = useProjectStore((s) => s.setTimelineRange);
 
-  // ── Sélection multiple ───────────────────────────────────────────────────────
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-
-  // Réinitialise la sélection quand on change de projet
-  useEffect(() => { setSelectedIds(new Set()); }, [activeProjectId]);
-
-  // Échap = désélectionner tout
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') setSelectedIds(new Set());
-    }
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, []);
-
   const handleSelect = useCallback((id: string, additive: boolean): void => {
-    setSelectedIds((prev) => {
-      if (additive) {
-        const next = new Set(prev);
-        if (next.has(id)) { next.delete(id); } else { next.add(id); }
-        return next;
-      }
-      if (prev.size === 1 && prev.has(id)) return prev; // déjà seul sélectionné
-      return new Set([id]);
-    });
-  }, []);
+    if (additive) {
+      const next = new Set(selectedIds);
+      if (next.has(id)) { next.delete(id); } else { next.add(id); }
+      onSelectChange(next);
+    } else {
+      if (selectedIds.size === 1 && selectedIds.has(id)) return;
+      onSelectChange(new Set([id]));
+    }
+  }, [selectedIds, onSelectChange]);
 
   const activeProject = projects.find((p) => p.id === activeProjectId);
   const sortedTasks   = [...tasks].sort((a, b) => a.order - b.order);
@@ -116,7 +102,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
 
   // Gère la fin d'un drag : tri vertical barre OU tri grip poignée OU nettoyage.
   const handleDragEnd = useCallback((event: DragEndEvent): void => {
-    taskDragEnd(); // commit le pendingReorder interne si drag vertical
+    taskDragEnd(); // commit le pendingReorder interne + push historique horizontal
     const vertReorder = popVerticalReorder();
 
     if (vertReorder) {
@@ -170,7 +156,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
               className="relative cursor-crosshair"
               style={{ minHeight: gridRows * ROW_H }}
               onMouseDown={onMouseDown}
-              onClick={() => setSelectedIds(new Set())}
+              onClick={() => onSelectChange(new Set())}
             >
               <GanttGrid config={config} zoom={zoom} rowCount={gridRows} />
 

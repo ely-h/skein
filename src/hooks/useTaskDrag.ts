@@ -3,8 +3,11 @@ import { useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import type { DragStartEvent, DragMoveEvent } from '@dnd-kit/core';
 import type { TimelineConfig } from '../lib/timeline';
 import { useTaskStore } from '../store/taskStore';
+import { useProjectStore } from '../store/projectStore';
+import { useHistoryStore } from '../store/historyStore';
 import { addDays } from '../lib/dates';
 import { ROW_H } from '../components/gantt/constants';
+import type { Task } from '../types/index';
 
 // Mouvement minimal avant de décider l'axe (horizontal vs vertical)
 const AXIS_THRESHOLD = 8;
@@ -19,6 +22,8 @@ interface DragState {
   originalEnd:   string;
   groupOrigins:  Map<string, { start: string; end: string }> | null;
   axis:          DragAxis;
+  tasksBefore:   Task[];  // snapshot au démarrage, pour l'historique
+  hasChanged:    boolean; // true si au moins une date a été modifiée
 }
 
 interface VerticalReorder {
@@ -37,14 +42,13 @@ export function useTaskDrag(config: TimelineConfig, selectedIds: Set<string>) {
   const updateTask = useTaskStore((s) => s.updateTask);
   const stateRef   = useRef<DragState | null>(null);
 
-  const [isGroupDragging,    setIsGroupDragging]    = useState(false);
-  const [isVerticalDragging, setIsVerticalDragging] = useState(false);
+  const [isGroupDragging,     setIsGroupDragging]     = useState(false);
+  const [isVerticalDragging,  setIsVerticalDragging]  = useState(false);
   const [verticalTargetIndex, setVerticalTargetIndex] = useState<number | null>(null);
 
-  // Ref synchrone pour lire le dernier index cible dans onDragEnd sans stale closure
+  // Refs synchrones pour lecture dans onDragEnd sans stale closure
   const verticalTargetIndexRef = useRef<number | null>(null);
-  // Résultat du tri vertical à consommer par GanttChart.handleDragEnd
-  const pendingReorderRef = useRef<VerticalReorder | null>(null);
+  const pendingReorderRef      = useRef<VerticalReorder | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
@@ -83,6 +87,8 @@ export function useTaskDrag(config: TimelineConfig, selectedIds: Set<string>) {
       groupOrigins,
       // Les handles de resize sont toujours horizontaux
       axis:          parsed.type === 'move' ? 'undecided' : 'horizontal',
+      tasksBefore:   [...tasks],
+      hasChanged:    false,
     };
   }, [selectedIds]);
 
@@ -120,18 +126,20 @@ export function useTaskDrag(config: TimelineConfig, selectedIds: Set<string>) {
         if (end < o.originalStart) end = o.originalStart;
       }
 
-      updateTask(o.taskId, { startDate: start, endDate: end });
+      // record:false → pas de push par frame, on pousse une seule fois dans onDragEnd
+      updateTask(o.taskId, { startDate: start, endDate: end }, { record: false });
+      o.hasChanged = true;
 
       if (o.type === 'move' && o.groupOrigins) {
         o.groupOrigins.forEach(({ start: gs, end: ge }, id) => {
-          updateTask(id, { startDate: addDays(gs, days), endDate: addDays(ge, days) });
+          updateTask(id, { startDate: addDays(gs, days), endDate: addDays(ge, days) }, { record: false });
         });
       }
 
     } else if (o.axis === 'vertical') {
-      const tasks       = useTaskStore.getState().tasks;
-      const sorted      = [...tasks].sort((a, b) => a.order - b.order);
-      const currentIdx  = sorted.findIndex((t) => t.id === o.taskId);
+      const tasks      = useTaskStore.getState().tasks;
+      const sorted     = [...tasks].sort((a, b) => a.order - b.order);
+      const currentIdx = sorted.findIndex((t) => t.id === o.taskId);
       if (currentIdx === -1) return;
 
       const shift     = Math.round(delta.y / ROW_H);
@@ -145,6 +153,13 @@ export function useTaskDrag(config: TimelineConfig, selectedIds: Set<string>) {
   const onDragEnd = useCallback((): void => {
     const o         = stateRef.current;
     const targetIdx = verticalTargetIndexRef.current;
+    const { activeProjectId } = useProjectStore.getState();
+
+    if (o?.axis === 'horizontal' && o.hasChanged && activeProjectId) {
+      // Un seul entrée d'historique pour tout le drag (pas une par frame)
+      const tasksAfter = [...useTaskStore.getState().tasks];
+      useHistoryStore.getState().push(activeProjectId, o.tasksBefore, tasksAfter);
+    }
 
     if (o?.axis === 'vertical' && targetIdx !== null) {
       const tasks      = useTaskStore.getState().tasks;
