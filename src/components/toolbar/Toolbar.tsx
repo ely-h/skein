@@ -53,6 +53,8 @@ interface Props {
   isExporting:   boolean;
   hasProject:    boolean;
   onImportClick: () => void;
+  onShare:       () => void;
+  shareLabel:    string;
   // Largeur de colonne (vue Gantt uniquement)
   dayWidth:              number;
   dayWidthMin:           number;
@@ -75,6 +77,7 @@ export default function Toolbar({
   onExportPng, onExportPdf, onExportJson,
   isExporting, hasProject,
   onImportClick,
+  onShare, shareLabel,
   dayWidth, dayWidthMin, dayWidthMax, onDayWidthChange,
   timelineStart, timelineEnd,
   effectiveStart, effectiveEnd,
@@ -220,6 +223,18 @@ export default function Toolbar({
         {/* Import */}
         <button type="button" onClick={onImportClick} className={btnGhost}>
           Importer
+        </button>
+
+        {DIVIDER}
+
+        {/* Partager */}
+        <button
+          type="button"
+          onClick={onShare}
+          disabled={!hasProject}
+          className={`${btnGhost} disabled:opacity-40 disabled:cursor-not-allowed`}
+        >
+          {shareLabel}
         </button>
 
         {DIVIDER}
