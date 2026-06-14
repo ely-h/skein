@@ -13,6 +13,7 @@ import Toolbar from './components/toolbar/Toolbar';
 import ProjectSidebar from './components/sidebar/ProjectSidebar';
 import { exportToPng, exportToPdf, exportToJson } from './lib/export';
 import { parseProjectJson } from './lib/import';
+import { buildShareUrl } from './lib/share';
 import { useDarkMode } from './hooks/useDarkMode';
 import type { ZoomLevel, ViewMode } from './types/index';
 
@@ -89,6 +90,8 @@ export default function App() {
 
   const [isExporting,  setIsExporting]  = useState(false);
   const [importError,  setImportError]  = useState<string | null>(null);
+  const [shareLabel,   setShareLabel]   = useState('Partager');
+  const [shareWarning, setShareWarning] = useState<string | null>(null);
 
   // Réinitialise sélection + historique lors d'un changement de projet
   useEffect(() => {
@@ -184,6 +187,23 @@ export default function App() {
     setTimelineRange(activeProject.id, start, end);
   }, [activeProject, setTimelineRange]);
 
+  const handleShare = useCallback(async (): Promise<void> => {
+    if (!activeProject) return;
+    const { url, oversized } = buildShareUrl(activeProject);
+    if (oversized) {
+      setShareWarning('Attention : le projet est volumineux (lien > 6 000 car.). Certains navigateurs pourraient tronquer l\'URL.');
+      setTimeout(() => setShareWarning(null), 8000);
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareLabel('Lien copié !');
+      setTimeout(() => setShareLabel('Partager'), 2000);
+    } catch {
+      // Fallback si l'API Clipboard n'est pas disponible (ex. HTTP non-sécurisé)
+      prompt('Copiez ce lien de partage :', url);
+    }
+  }, [activeProject]);
+
   const handleFileChange = useCallback(async (
     e: React.ChangeEvent<HTMLInputElement>,
   ): Promise<void> => {
@@ -237,6 +257,8 @@ export default function App() {
             isExporting={isExporting}
             hasProject={!!activeProjectId}
             onImportClick={handleImportClick}
+            onShare={handleShare}
+            shareLabel={shareLabel}
             dayWidth={dayWidth}
             dayWidthMin={dayWidthMin}
             dayWidthMax={dayWidthMax}
@@ -255,6 +277,18 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setImportError(null)}
+                className="flex-none font-medium hover:underline"
+              >
+                Fermer
+              </button>
+            </div>
+          )}
+          {shareWarning && (
+            <div className="flex items-center justify-between gap-3 px-4 py-2 bg-amber-50 dark:bg-amber-950 border-b border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-xs">
+              <span>{shareWarning}</span>
+              <button
+                type="button"
+                onClick={() => setShareWarning(null)}
                 className="flex-none font-medium hover:underline"
               >
                 Fermer
