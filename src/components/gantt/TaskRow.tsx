@@ -102,7 +102,7 @@ export default function TaskRow({ task, config, onEdit, isSelected, isInGroupDra
           <GripIcon />
         </div>
 
-        <div className={`flex-none w-1.5 h-1.5 rounded-full ${STATUS_DOT[task.status]}`} />
+        <div className={`flex-none w-1.5 h-1.5 rounded-full transition-colors duration-300 ease-out ${STATUS_DOT[task.status]}`} />
 
         <span className="truncate text-sm text-neutral-700 dark:text-neutral-300 flex-1 min-w-0">
           {task.name}

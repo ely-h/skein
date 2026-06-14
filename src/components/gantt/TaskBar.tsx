@@ -16,6 +16,10 @@ const STATUS_TEXT: Record<TaskStatus, string> = {
   done:        'text-white',
 };
 
+// Transitions actives uniquement au repos — pendant le drag tout doit être instantané.
+const TRANSITION_IDLE   = 'transition-[background-color,box-shadow,opacity,color] duration-300 ease-out';
+const TRANSITION_MOVING = 'transition-none';
+
 function ResizeHandle({ id, side }: { id: string; side: 'left' | 'right' }) {
   const { setNodeRef, listeners, attributes } = useDraggable({ id });
 
@@ -67,12 +71,12 @@ export default function TaskBar({ task, config, isSelected, isInGroupDrag, onSel
       data-task-bar=""
       data-no-drag=""
       className={[
-        'absolute top-1/2 -translate-y-1/2 h-7 rounded-md touch-none overflow-hidden transition-opacity',
+        'absolute top-1/2 -translate-y-1/2 h-7 rounded-md touch-none overflow-hidden',
         STATUS_BG[task.status],
         isSelected ? 'ring-2 ring-white/75' : '',
         isMoving
-          ? 'opacity-50 shadow-lg cursor-grabbing'
-          : 'cursor-grab hover:opacity-85',
+          ? `opacity-50 shadow-lg cursor-grabbing ${TRANSITION_MOVING}`
+          : `cursor-grab hover:opacity-90 hover:shadow-md ${TRANSITION_IDLE}`,
       ].join(' ')}
       style={{ left: x, width }}
       title={task.name}
@@ -90,6 +94,7 @@ export default function TaskBar({ task, config, isSelected, isInGroupDrag, onSel
             'absolute inset-x-3 inset-y-0 flex items-center text-[11px] font-medium',
             'truncate pointer-events-none select-none',
             STATUS_TEXT[task.status],
+            isMoving ? TRANSITION_MOVING : 'transition-colors duration-300 ease-out',
           ].join(' ')}
         >
           {task.name}
