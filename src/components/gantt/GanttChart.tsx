@@ -98,7 +98,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
     isVerticalDragging,
     verticalTargetIndex,
     popVerticalReorder,
-  } = useTaskDrag(config, selectedIds);
+  } = useTaskDrag(config, selectedIds, scrollRef);
 
   // Gère la fin d'un drag : tri vertical barre OU tri grip poignée OU nettoyage.
   const handleDragEnd = useCallback((event: DragEndEvent): void => {
@@ -150,6 +150,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
           onDragStart={onDragStart}
           onDragMove={onDragMove}
           onDragEnd={handleDragEnd}
+          autoScroll={false}
         >
           <SortableContext items={sortedTasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
             <div

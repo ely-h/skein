@@ -71,6 +71,10 @@ interface Project {
 - [x] v2/08. Bornes auto-extensibles : drag/resize d'une tâche hors des bornes manuelles → timelineStart/End mis à jour en store avec padding (7j avant, 14j après).
 - [x] v2/09. Réordonnage vertical : poignée dans la colonne des noms, drag vertical dnd-kit, champ `order` mis à jour dans le store, sans interférence avec le drag horizontal.
 
+## V4 — Corrections & polish
+
+- [x] v4/01. Auto-scroll contrôlé pendant le drag : désactivation de l'auto-scroll dnd-kit, zone de déclenchement 60 px depuis les bords, vitesse proportionnelle à la proximité (RAF), correction du delta (`delta.x + scrollDelta`) pour que la barre reste sous le pointeur.
+
 ## V3 — PWA & partage
 
 - [x] v3/05. Partage par URL : encode le projet en base64 dans l'URL, vue Gantt lecture seule sur `/share`.
