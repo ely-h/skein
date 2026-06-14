@@ -4,6 +4,8 @@ import { fr } from 'date-fns/locale';
 import type { Task, TaskStatus } from '../../types/index';
 import { parseDate } from '../../lib/dates';
 import { useTaskStore } from '../../store/taskStore';
+import { useThemeStore } from '../../store/themeStore';
+import { contrastColor } from '../../lib/color';
 
 const NEXT_STATUS: Record<TaskStatus, TaskStatus> = {
   not_started: 'in_progress',
@@ -12,22 +14,34 @@ const NEXT_STATUS: Record<TaskStatus, TaskStatus> = {
 };
 
 function StatusIcon({ status }: { status: TaskStatus }) {
+  const statusColors = useThemeStore((s) => s.statusColors);
+  const color = statusColors[status];
+
   if (status === 'done') {
     return (
-      <div className="w-4 h-4 rounded-full bg-emerald-400 dark:bg-emerald-500 flex items-center justify-center flex-none">
+      <div
+        className="w-4 h-4 rounded-full flex items-center justify-center flex-none"
+        style={{ backgroundColor: color }}
+      >
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-          <path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M2 5l2.5 2.5L8 3" stroke={contrastColor(color)} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
     );
   }
   if (status === 'in_progress') {
     return (
-      <div className="w-4 h-4 rounded-full border-2 border-sky-400 dark:border-sky-500 bg-sky-400/25 dark:bg-sky-500/20 flex-none" />
+      <div
+        className="w-4 h-4 rounded-full border-2 flex-none"
+        style={{ borderColor: color, backgroundColor: `${color}40` }}
+      />
     );
   }
   return (
-    <div className="w-4 h-4 rounded-full border-2 border-[#D4D0CA] dark:border-neutral-600 flex-none" />
+    <div
+      className="w-4 h-4 rounded-full border-2 flex-none"
+      style={{ borderColor: color }}
+    />
   );
 }
 
