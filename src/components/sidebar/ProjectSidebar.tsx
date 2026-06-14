@@ -103,7 +103,7 @@ export default function ProjectSidebar() {
                   className={[
                     'flex items-center gap-1 px-2 py-1.5 rounded-xl cursor-pointer transition-colors',
                     isActive
-                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400'
+                      ? 'bg-[#D0E5DF] dark:bg-emerald-950/40 text-[#4a7c6a] dark:text-emerald-400'
                       : 'text-neutral-700 dark:text-neutral-300 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700/50',
                   ].join(' ')}
                 >

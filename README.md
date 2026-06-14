@@ -1,82 +1,142 @@
-# Skein
+# PLAN — Gantt Maker
 
-Skein est un outil de planification en diagramme de Gantt fait maison. Le constat de départ est simple : les alternatives en ligne sont soit payantes, soit franchement moches, soit les deux. L'objectif était donc d'avoir quelque chose de sobre et agréable à utiliser, sans compte à créer ni abonnement à souscrire.
-
-Le projet a été développé en vibe-coding assisté par IA, avec une architecture pensée dès le départ pour rester propre et maintenable malgré ce mode de développement.
-
-![capture d'écran](./docs/screenshot.png)
-
----
-
-## Fonctionnalités
-
-**Gantt**
-- Création de tâches par drag sur le calendrier
-- Déplacement et redimensionnement des barres à la souris
-- Zoom jour, semaine ou mois
-- Week-ends grisés
-
-**Tâches**
-- Trois états : pas commencé, en cours, terminé
-- Vue liste et vue Gantt sur les mêmes données
-- Les tâches sans dates apparaissent uniquement en vue liste
-
-**Projets**
-- Gestion de plusieurs projets indépendants
-- Export PNG, PDF, JSON
-- Import depuis un fichier JSON pour reconstruire un Gantt existant
-
-**Interface**
-- Dark mode et light mode
-- Données sauvegardées localement dans le navigateur, rien n'est envoyé nulle part
-
----
+Application web de création de diagrammes de Gantt. Front-end uniquement, zéro backend.
+Granularité : jour. Horizon : quelques semaines à quelques mois.
 
 ## Stack
+- React 19 + TypeScript (strict)
+- Vite (build/dev)
+- Tailwind v4 (style)
+- Zustand + persist (state + localStorage)
+- dnd-kit (drag / resize / move)
+- date-fns (calculs de dates)
+- html-to-image + jsPDF (export PNG/PDF)
 
-React 19, TypeScript strict, Vite, Tailwind v4, Zustand, dnd-kit, date-fns, jsPDF, html-to-image.
+## Règle d'or anti-spaghetti
+Toute conversion date <-> pixel passe UNIQUEMENT par `lib/timeline.ts`.
+`types/` et `lib/` ne dépendent de rien (logique pure, testable).
+Les composants consomment les stores, jamais l'inverse.
 
----
+## Modèle de données (figé étape 1, ne pas casser)
+```ts
+type TaskStatus = 'not_started' | 'in_progress' | 'done';
+// not_started -> gris clair | in_progress -> baby blue | done -> vert menthe
 
-## Lancer le projet en local
+interface Task {
+  id: string;
+  projectId: string;
+  name: string;
+  startDate: string | null;   // ISO 'YYYY-MM-DD' | null = pas planifiée (liste seule)
+  endDate: string | null;     // ISO, inclusif | null
+  status: TaskStatus;
+  parentId: string | null;    // null en v1, porte ouverte hiérarchie
+  order: number;
+}
+// Une tâche sans dates existe en vue Liste mais n'apparaît pas dans le Gantt.
 
-```bash
-git clone https://github.com/ely-h/skein.git
-cd skein
-npm install
-npm run dev
+interface Project {
+  id: string;
+  name: string;
+  createdAt: string;
+  tasks: Task[];
+}
 ```
 
-L'app tourne sur `http://localhost:5173`.
+## Étapes (une étape = un prompt = validée visuellement avant la suivante)
 
-```bash
-npm run build   # build de production
-npm run test    # lance les tests
-```
+- [ ] 1. Setup Vite/TS/Tailwind + figer `types/index.ts`. Rien d'autre.
+- [ ] 2. `lib/dates.ts` + `lib/timeline.ts` (logique pure conversion date<->pixel). Tests dessus.
+- [ ] 3. Stores Zustand (projet + tâches) + persist localStorage.
+- [ ] 4. Gantt statique lecture seule : header temporel + grille + barres depuis données en dur. Aucune interaction.
+- [ ] 5. Création de tâche basique (bouton + formulaire). CRUD complet.
+- [ ] 6. Drag-create : tirer à la souris sur la grille pour créer une barre.
+- [ ] 7. Move + resize d'une barre existante.
+- [ ] 8. Zoom jour / semaine / mois.
+- [ ] 9. Multi-projet (sidebar + switch).
+- [ ] 9bis. Vue Liste : ViewSwitcher (Gantt <-> Liste) + tasklist (checkbox statut, nom, dates optionnelles). Même store, aucune logique pixel.
+- [ ] 10. Export PNG / PDF / JSON.
+- [ ] 11. Import JSON avec validation (refuse un JSON malformé proprement).
+- [ ] 12. Polish : transitions, états de tâches, dark/light, vert menthe.
 
----
+## Esthétique
+- Épuré, sobre, moderne. Coins ni trop sharp ni trop arrondis (radius ~6-8px).
+- Accent : vert menthe. États tâches : gris clair / baby blue / vert menthe.
+- Dark + light mode.
 
-## Architecture
-
-Le projet suit une séparation stricte entre logique et UI. `types/` et `lib/` sont de la logique pure sans aucune dépendance vers les composants. Les composants consomment les stores Zustand, et toute conversion date/pixel passe uniquement par `lib/timeline.ts`. Cette contrainte évite que le code parte en spaghetti au fil des ajouts.
-
+## Architecture cible
 ```
 src/
-├── types/        # contrats de données (Task, Project, TaskStatus)
-├── store/        # état global (Zustand + persist localStorage)
-├── lib/          # logique pure (dates, timeline, export, import)
-├── components/   # UI (gantt/, list/, sidebar/, toolbar/, ui/)
-└── hooks/        # drag-create, move, resize
+├── types/index.ts
+├── store/{projectStore,taskStore}.ts
+├── lib/{dates,timeline,export,import}.ts
+├── components/
+│   ├── views/{ViewSwitcher,GanttView,ListView}.tsx
+│   ├── gantt/{GanttChart,GanttHeader,GanttGrid,TaskRow,TaskBar,TaskList}.tsx
+│   ├── list/{TaskListView,TaskListItem}.tsx
+│   ├── sidebar/ProjectSidebar.tsx
+│   ├── toolbar/Toolbar.tsx
+│   └── ui/
+├── hooks/{useDragCreate,useTaskDrag}.ts
+├── App.tsx
+└── main.tsx
 ```
 
 ---
 
-## Démo
+## V2
 
-Disponible sur [ely-h.github.io/skein](https://ely-h.github.io/skein)
+### Modèle de données — extensions v2
+```ts
+interface Project {
+  id: string;
+  name: string;
+  createdAt: string;
+  tasks: Task[];
+  timelineStart: string;  // YYYY-MM-DD, date de début du Gantt
+  timelineEnd: string;    // YYYY-MM-DD, date de fin du Gantt
+}
+```
+`timelineStart` et `timelineEnd` remplacent le calcul automatique de la plage.
+La plage est modifiable par l'utilisateur et peut être étendue à tout moment.
+
+### Étapes v2 (même règle : une étape = un prompt = validée avant la suivante)
+
+- [ ] v2/01. Persistance : investiguer et corriger le bug de perte de données au refresh. Zustand persist doit survivre à un hard refresh. Ajouter un test de non-régression.
+- [ ] v2/02. UX polish : fond light mode `#F8F7F4` (blanc chaud), gris "à faire" plus clair en dark mode, hauteur des barres de tâches légèrement augmentée (+4px), border-radius des boutons plus arrondi (~12px), favicon `logo.png`.
+- [ ] v2/03. Sidebar redimensionnable : l'utilisateur peut tirer le bord droit de la sidebar pour l'élargir ou la rétrécir. Largeur min 180px, max 400px. Persister la largeur dans localStorage.
+- [ ] v2/04. Plage temporelle : chaque projet a une `timelineStart` et `timelineEnd` configurables. Un sélecteur de dates dans la Toolbar permet de les modifier. La plage peut être étendue mais pas réduite en dessous des tâches existantes.
+- [ ] v2/05. Largeur des colonnes ajustable : l'utilisateur peut élargir ou rétrécir la largeur d'une colonne (jour/semaine) via un slider ou drag sur le header. Persister par zoom level dans localStorage.
+- [ ] v2/06. Export dropdown : remplacer les boutons export séparés par un seul bouton avec dropdown menu (PNG / PDF / JSON). Même logique d'export, juste l'UI qui change.
+- [ ] v2/07. Sélection multiple + déplacement groupé : clic + shift ou clic + ctrl pour sélectionner plusieurs tâches. Déplacer le groupe d'un même delta de jours. Highlight visuel des tâches sélectionnées.
+- [ ] v2/08. Bornes du Gantt : empêcher le drag/resize d'une tâche hors de la plage `timelineStart`/`timelineEnd`. Une tâche ne peut pas sortir des bornes visibles.
+- [ ] v2/09. Réordonnage des tâches : drag & drop vertical dans la colonne des noms pour réordonner les tâches (changer leur `order`). Mettre à jour le store en temps réel.
+- [ ] v2/10. Landing page : page d'accueil avec logo, nom, description courte, CTA "Ouvrir l'app". Style cohérent avec l'app (même tokens Tailwind). Route `/` = landing, `/app` = l'app.
+
+### Esthétique v2
+- Light mode : fond `#F8F7F4`, pas de blanc pur.
+- Dark mode : gris "à faire" (not_started) plus clair pour être lisible.
+- Boutons : border-radius ~12px.
+- Barres de tâches : hauteur augmentée de ~4px par rapport à la v1.
+- Favicon : `logo.png` à la racine dans `public/`.
 
 ---
 
-## Licence
+## V3
 
-MIT — faites-en ce que vous voulez.
+### Objectifs
+Partage, installabilité, fluidité, raccourcis clavier, et drag vertical des barres.
+
+### Étapes v3 (même règle : une étape = un prompt = validée avant la suivante)
+
+- [x] v3/01. Fix couleur de sélection light mode : le vert de sélection est trop clair et invisible. Remplacer par un vert grisé plus foncé et lisible (ex. `#4a7c6a` ou similaire). Auditer tous les états hover/focus/selected sur les barres et boutons en light mode.
+- [ ] v3/02. Drag vertical des barres : en plus du drag horizontal (déplacement temporel), une barre peut être tirée verticalement pour changer l'ordre de la tâche (`order`). Le drag vertical ne doit pas déclencher de déplacement horizontal. Différencier les deux axes dès le début du drag (seuil de détection ~8px). S'appuyer sur le hook `useTaskDrag.ts` existant.
+- [ ] v3/03. Raccourcis clavier : `Delete`/`Backspace` supprime la tâche sélectionnée (avec confirmation), `Escape` désélectionne tout et ferme les modales, `Ctrl+Z` undo (dernière action), `Ctrl+Y` redo. L'undo/redo couvre : création, suppression, déplacement, resize de tâche. Implémenter une pile d'historique dans le store (`lib/history.ts`), max 50 actions.
+- [ ] v3/04. Smooth UI : passer en revue toutes les interactions et ajouter des transitions fluides. Barres de tâches : transition de couleur au changement de statut (300ms ease). Sidebar : transition d'ouverture/fermeture. Dropdown export : animation d'apparition (fade + slide léger). Hover sur les barres : légère élévation (box-shadow). Drag : curseur `grab`/`grabbing`. Aucune transition sur les mouvements de drag (ça doit rester instantané pour ne pas sembler laggy).
+- [ ] v3/05. Partage via URL : un bouton "Partager" dans la Toolbar encode le projet actif en base64 dans l'URL (`/share?data=...`). La page `/share` affiche le Gantt en lecture seule avec un bouton "Importer dans Skein" qui ajoute le projet au store local. Valider et sanitizer le contenu décodé avant import (même logique que `lib/import.ts`). Attention à la limite de longueur des URLs (~8000 chars) : afficher un warning si le projet est trop grand.
+- [ ] v3/06. PWA : configurer `vite-plugin-pwa` avec un service worker. Cache offline complet (app shell + assets). Manifest avec `logo.png` comme icône, nom "Skein", thème vert menthe. Installable sur desktop et mobile. Le service worker ne doit pas casser le routing React.
+
+### Esthétique v3
+- Couleur de sélection light mode : vert grisé foncé, visible sur fond `#F8F7F4`.
+- Transitions : 200-300ms ease, jamais sur les drags.
+- Curseur `grab` sur les barres, `grabbing` pendant le drag, `ew-resize` sur les bords de resize.
+- Smooth partout, sans jamais sacrifier la réactivité.
