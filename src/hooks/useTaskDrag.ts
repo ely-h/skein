@@ -56,6 +56,7 @@ export function useTaskDrag(
   const verticalTargetIndexRef = useRef<number | null>(null);
   const pendingReorderRef      = useRef<VerticalReorder | null>(null);
   const pointerMoveCleanupRef  = useRef<(() => void) | null>(null);
+  const scrollLockCleanupRef   = useRef<(() => void) | null>(null);
 
   // Refs pour l'auto-scroll (pas de re-render, lecture synchrone dans le RAF)
   const rafRef           = useRef<number | null>(null);
@@ -142,6 +143,15 @@ export function useTaskDrag(
     scrollDeltaRef.current   = 0;
     latestDeltaRef.current   = { x: 0, y: 0 };
 
+    // Empêche le browser de scroller le container pendant le drag (autoscroll natif).
+    if (scrollRef.current) {
+      const el      = scrollRef.current;
+      const locked  = initialScrollRef.current;
+      const onScroll = () => { el.scrollLeft = locked; };
+      el.addEventListener('scroll', onScroll);
+      scrollLockCleanupRef.current = () => el.removeEventListener('scroll', onScroll);
+    }
+
     // Pointermove natif pour connaître la position X brute (non fournie par dnd-kit)
     function onPointerMove(e: PointerEvent): void {
       pointerXRef.current = e.clientX;
@@ -206,6 +216,8 @@ export function useTaskDrag(
     // stopAutoScroll(); // désactivé
     pointerMoveCleanupRef.current?.();
     pointerMoveCleanupRef.current = null;
+    scrollLockCleanupRef.current?.();
+    scrollLockCleanupRef.current = null;
 
     const o         = stateRef.current;
     const targetIdx = verticalTargetIndexRef.current;
