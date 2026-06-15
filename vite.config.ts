@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  base: '/skein/',
+  base: '/',
   plugins: [
     react(),
     tailwindcss(),
@@ -18,8 +18,8 @@ export default defineConfig({
         theme_color: '#10b981',
         background_color: '#F8F7F4',
         display: 'standalone',
-        start_url: '/skein/',
-        scope: '/skein/',
+        start_url: '/',
+        scope: '/',
         icons: [
           { src: 'pwa-64x64.png',           sizes: '64x64',   type: 'image/png' },
           { src: 'pwa-192x192.png',          sizes: '192x192', type: 'image/png' },
@@ -30,7 +30,7 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         // Sert index.html pour toutes les routes SPA (/, /share) quand offline
-        navigateFallback: '/skein/index.html',
+        navigateFallback: '/index.html',
         // Exclut les requêtes API/fetch non-navigation
         navigateFallbackDenylist: [/^\/__/],
         clientsClaim: true,
