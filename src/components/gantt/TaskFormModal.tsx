@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import type { TaskStatus } from '../../types/index';
+import type { TaskStatus, CustomStatus } from '../../types/index';
 import type { TaskInput } from '../../store/taskStore';
 import { useTaskStore } from '../../store/taskStore';
+import { useThemeStore } from '../../store/themeStore';
 import Modal from '../ui/Modal';
 
 const INPUT_CLS =
@@ -10,9 +11,7 @@ const INPUT_CLS =
 const LABEL_CLS = 'block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1';
 
 interface Props {
-  /** null = création, string = édition */
   taskId: string | null;
-  /** Dates pré-remplies lors d'un drag-create (ignorées en mode édition). */
   initialStartDate?: string;
   initialEndDate?: string;
   onClose: () => void;
@@ -24,14 +23,38 @@ export default function TaskFormModal({ taskId, initialStartDate, initialEndDate
   const deleteTask = useTaskStore((s) => s.deleteTask);
   const editing    = useTaskStore((s) => s.tasks.find((t) => t.id === taskId));
 
+  const addCustomStatus    = useThemeStore((s) => s.addCustomStatus);
+  const customStatuses     = useThemeStore((s) => s.customStatuses);
+
   const isEdit = taskId !== null;
 
-  const [name,      setName]      = useState(editing?.name ?? '');
-  const [startDate, setStartDate] = useState(editing?.startDate ?? initialStartDate ?? '');
-  const [endDate,   setEndDate]   = useState(editing?.endDate   ?? initialEndDate   ?? '');
-  const [status,    setStatus]    = useState<TaskStatus>(editing?.status ?? 'not_started');
-  const [error,     setError]     = useState('');
+  const [name,       setName]       = useState(editing?.name ?? '');
+  const [startDate,  setStartDate]  = useState(editing?.startDate ?? initialStartDate ?? '');
+  const [endDate,    setEndDate]    = useState(editing?.endDate   ?? initialEndDate   ?? '');
+  const [status,     setStatus]     = useState<TaskStatus>(editing?.status ?? 'not_started');
+  const [customLabel, setCustomLabel] = useState(editing?.customStatus?.label ?? '');
+  const [customColor, setCustomColor] = useState(editing?.customStatus?.color ?? '#a78bfa');
+  const [error,      setError]      = useState('');
   const [confirmDel, setConfirmDel] = useState(false);
+
+  function handleStatusChange(val: string): void {
+    if (val === 'custom') {
+      setStatus('custom');
+      return;
+    }
+    // Preset custom sélectionné depuis la liste
+    if (val.startsWith('preset:')) {
+      const label = val.slice(7);
+      const preset = customStatuses.find((cs) => cs.label === label);
+      if (preset) {
+        setStatus('custom');
+        setCustomLabel(preset.label);
+        setCustomColor(preset.color);
+      }
+      return;
+    }
+    setStatus(val as TaskStatus);
+  }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>): void {
     e.preventDefault();
@@ -40,12 +63,26 @@ export default function TaskFormModal({ taskId, initialStartDate, initialEndDate
       setError('La date de fin doit être égale ou postérieure à la date de début.');
       return;
     }
+    if (status === 'custom' && !customLabel.trim()) {
+      setError('Le libellé du statut personnalisé est requis.');
+      return;
+    }
+
+    const resolvedCustom: CustomStatus | undefined =
+      status === 'custom' ? { label: customLabel.trim(), color: customColor } : undefined;
+
+    if (resolvedCustom) {
+      addCustomStatus(resolvedCustom);
+    }
+
     const input: TaskInput = {
       name: name.trim(),
       startDate: startDate || null,
       endDate:   endDate   || null,
       status,
+      customStatus: resolvedCustom,
     };
+
     if (isEdit && taskId) {
       updateTask(taskId, input);
     } else {
@@ -103,12 +140,12 @@ export default function TaskFormModal({ taskId, initialStartDate, initialEndDate
         </div>
 
         {/* Statut */}
-        <div className="mb-5">
+        <div className="mb-4">
           <label className={LABEL_CLS}>Statut</label>
           <select
             className={INPUT_CLS}
-            value={status}
-            onChange={(e) => setStatus(e.target.value as TaskStatus)}
+            value={status === 'custom' ? (customStatuses.some((cs) => cs.label === customLabel) ? `preset:${customLabel}` : 'custom') : status}
+            onChange={(e) => { handleStatusChange(e.target.value); setError(''); }}
           >
             <option value="backlog">Backlog</option>
             <option value="not_started">À faire</option>
@@ -116,8 +153,48 @@ export default function TaskFormModal({ taskId, initialStartDate, initialEndDate
             <option value="in_review">En validation</option>
             <option value="blocked">Bloqué</option>
             <option value="done">Terminé</option>
+            {customStatuses.length > 0 && (
+              <optgroup label="Personnalisés">
+                {customStatuses.map((cs) => (
+                  <option key={cs.label} value={`preset:${cs.label}`}>
+                    {cs.label}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            <option value="custom">Personnalisé…</option>
           </select>
         </div>
+
+        {/* Champs custom si status === 'custom' */}
+        {status === 'custom' && (
+          <div className="flex gap-3 mb-4 items-end">
+            <div className="flex-1">
+              <label className={LABEL_CLS}>Libellé</label>
+              <input
+                type="text"
+                className={INPUT_CLS}
+                value={customLabel}
+                onChange={(e) => { setCustomLabel(e.target.value); setError(''); }}
+                placeholder="Ex : En attente"
+              />
+            </div>
+            <div>
+              <label className={LABEL_CLS}>Couleur</label>
+              <div
+                className="w-9 h-9 rounded-md border-2 border-[#E8E6E1] dark:border-neutral-700 overflow-hidden relative"
+                style={{ backgroundColor: customColor }}
+              >
+                <input
+                  type="color"
+                  value={customColor}
+                  onChange={(e) => setCustomColor(e.target.value)}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Message d'erreur */}
         {error && (
@@ -126,7 +203,6 @@ export default function TaskFormModal({ taskId, initialStartDate, initialEndDate
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          {/* Suppression (mode édition) */}
           {isEdit && !confirmDel && (
             <button
               type="button"

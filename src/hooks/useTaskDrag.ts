@@ -3,17 +3,16 @@ import { useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import type { DragStartEvent, DragMoveEvent } from '@dnd-kit/core';
 import type { RefObject } from 'react';
 import type { TimelineConfig } from '../lib/timeline';
-// import { LABEL_W } from '../components/gantt/constants'; // désactivé
+import { LABEL_W, ROW_H } from '../components/gantt/constants';
 import { useTaskStore } from '../store/taskStore';
 import { useProjectStore } from '../store/projectStore';
 import { useHistoryStore } from '../store/historyStore';
 import { addDays } from '../lib/dates';
-import { ROW_H } from '../components/gantt/constants';
 import type { Task } from '../types/index';
 
 const AXIS_THRESHOLD = 8;
-// const SCROLL_ZONE = 60;  // désactivé
-// const MAX_SPEED   = 12;  // désactivé
+const SCROLL_ZONE    = 60;
+const MAX_SPEED      = 14;
 
 type DragType = 'move' | 'resize-left' | 'resize-right';
 type DragAxis = 'undecided' | 'horizontal' | 'vertical';
@@ -56,20 +55,16 @@ export function useTaskDrag(
   const verticalTargetIndexRef = useRef<number | null>(null);
   const pendingReorderRef      = useRef<VerticalReorder | null>(null);
   const pointerMoveCleanupRef  = useRef<(() => void) | null>(null);
-  const scrollLockCleanupRef   = useRef<(() => void) | null>(null);
 
-  // Refs pour l'auto-scroll (pas de re-render, lecture synchrone dans le RAF)
-  const rafRef           = useRef<number | null>(null);
-  const initialScrollRef = useRef<number>(0);
-  const scrollDeltaRef   = useRef<number>(0);
-  const pointerXRef      = useRef<number>(0);
-  const latestDeltaRef   = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const initialScrollRef  = useRef<number>(0);
+  const scrollDeltaRef    = useRef<number>(0);
+  const pointerXRef       = useRef<number>(0);
+  const lastPointerXRef   = useRef<number>(0);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
   );
 
-  // Applique le déplacement horizontal en corrigeant le scroll intervenu pendant le drag.
   const applyHorizontalMove = useCallback((
     delta: { x: number },
     scrollDelta: number,
@@ -102,18 +97,6 @@ export function useTaskDrag(
     }
   }, [config.dayWidth, updateTask]);
 
-  const stopAutoScroll = useCallback((): void => {
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-  }, []);
-
-  // DEBUG : auto-scroll désactivé pour isoler le comportement du drag seul
-  const startAutoScroll = useCallback((): void => { /* désactivé */ }, []);
-
-  const _tick = (): void => { /* désactivé */ }; void _tick;
-
   const onDragStart = useCallback(({ active }: DragStartEvent): void => {
     const parsed = parseDragId(String(active.id));
     if (!parsed) return;
@@ -141,18 +124,8 @@ export function useTaskDrag(
 
     initialScrollRef.current = scrollRef.current?.scrollLeft ?? 0;
     scrollDeltaRef.current   = 0;
-    latestDeltaRef.current   = { x: 0, y: 0 };
+    lastPointerXRef.current  = 0;
 
-    // Empêche le browser de scroller le container pendant le drag (autoscroll natif).
-    if (scrollRef.current) {
-      const el      = scrollRef.current;
-      const locked  = initialScrollRef.current;
-      const onScroll = () => { el.scrollLeft = locked; };
-      el.addEventListener('scroll', onScroll);
-      scrollLockCleanupRef.current = () => el.removeEventListener('scroll', onScroll);
-    }
-
-    // Pointermove natif pour connaître la position X brute (non fournie par dnd-kit)
     function onPointerMove(e: PointerEvent): void {
       pointerXRef.current = e.clientX;
     }
@@ -175,15 +148,12 @@ export function useTaskDrag(
     const o = stateRef.current;
     if (!o) return;
 
-    latestDeltaRef.current = delta;
-
     if (o.axis === 'undecided') {
       const absX = Math.abs(delta.x);
       const absY = Math.abs(delta.y);
       if (absY >= AXIS_THRESHOLD && absY > absX) {
         o.axis = 'vertical';
         setIsVerticalDragging(true);
-        // stopAutoScroll(); // désactivé
         return;
       } else if (absX >= AXIS_THRESHOLD) {
         o.axis = 'horizontal';
@@ -193,10 +163,33 @@ export function useTaskDrag(
     }
 
     if (o.axis === 'horizontal') {
-      // Lit le scrollLeft réel pour corriger delta.x quelle que soit la source du scroll
-      scrollDeltaRef.current = (scrollRef.current?.scrollLeft ?? initialScrollRef.current) - initialScrollRef.current;
+      const el = scrollRef.current;
+
+      // Auto-scroll synchrone dans le sens du mouvement du pointeur uniquement.
+      // Conditionner au sens évite la boucle d'accélération : si le pointeur
+      // est dans la zone droite mais que l'utilisateur recule, on ne scroll pas.
+      if (el && pointerXRef.current !== 0) {
+        const rect           = el.getBoundingClientRect();
+        const px             = pointerXRef.current;
+        const pointerDirX    = px - lastPointerXRef.current; // positif = vers la droite
+        const rightDist      = rect.right - px;
+        const leftDist       = px - (rect.left + LABEL_W);
+
+        let speed = 0;
+        if (pointerDirX > 0 && rightDist > 0 && rightDist < SCROLL_ZONE) {
+          speed = MAX_SPEED * (1 - rightDist / SCROLL_ZONE);
+        } else if (pointerDirX < 0 && leftDist > 0 && leftDist < SCROLL_ZONE) {
+          speed = -MAX_SPEED * (1 - leftDist / SCROLL_ZONE);
+        }
+
+        if (speed !== 0) {
+          el.scrollLeft += speed;
+        }
+      }
+
+      lastPointerXRef.current = pointerXRef.current;
+      scrollDeltaRef.current  = (el?.scrollLeft ?? initialScrollRef.current) - initialScrollRef.current;
       applyHorizontalMove(delta, scrollDeltaRef.current);
-      // startAutoScroll(); // désactivé
 
     } else if (o.axis === 'vertical') {
       const tasks      = useTaskStore.getState().tasks;
@@ -210,14 +203,11 @@ export function useTaskDrag(
       verticalTargetIndexRef.current = targetIdx;
       setVerticalTargetIndex(targetIdx);
     }
-  }, [applyHorizontalMove, startAutoScroll, stopAutoScroll]);
+  }, [applyHorizontalMove, scrollRef]);
 
   const onDragEnd = useCallback((): void => {
-    // stopAutoScroll(); // désactivé
     pointerMoveCleanupRef.current?.();
     pointerMoveCleanupRef.current = null;
-    scrollLockCleanupRef.current?.();
-    scrollLockCleanupRef.current = null;
 
     const o         = stateRef.current;
     const targetIdx = verticalTargetIndexRef.current;
@@ -242,7 +232,7 @@ export function useTaskDrag(
     setIsGroupDragging(false);
     setIsVerticalDragging(false);
     setVerticalTargetIndex(null);
-  }, [stopAutoScroll]);
+  }, []);
 
   const popVerticalReorder = useCallback((): VerticalReorder | null => {
     const r = pendingReorderRef.current;

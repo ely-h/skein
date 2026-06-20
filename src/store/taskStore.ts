@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Task, TaskStatus } from '../types/index';
+import type { Task, TaskStatus, CustomStatus } from '../types/index';
 import { useProjectStore } from './projectStore';
 import { useHistoryStore } from './historyStore';
 
@@ -8,6 +8,7 @@ export interface TaskInput {
   startDate: string | null;
   endDate: string | null;
   status: TaskStatus;
+  customStatus?: CustomStatus;
 }
 
 interface TaskState {
@@ -15,7 +16,7 @@ interface TaskState {
   addTask: (input: TaskInput) => void;
   updateTask: (
     id: string,
-    updates: Partial<Pick<Task, 'name' | 'startDate' | 'endDate' | 'status' | 'parentId'>>,
+    updates: Partial<Pick<Task, 'name' | 'startDate' | 'endDate' | 'status' | 'customStatus' | 'parentId'>>,
     options?: { record?: boolean }
   ) => void;
   deleteTask: (id: string) => void;

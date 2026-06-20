@@ -1,7 +1,7 @@
-import type { Project, Task, TaskStatus } from '../types/index';
+import type { Project, Task, TaskStatus, CustomStatus } from '../types/index';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const VALID_STATUSES: readonly TaskStatus[] = ['backlog', 'not_started', 'in_progress', 'in_review', 'blocked', 'done'];
+const VALID_STATUSES: readonly TaskStatus[] = ['backlog', 'not_started', 'in_progress', 'in_review', 'blocked', 'done', 'custom'];
 
 function isStr(v: unknown): v is string {
   return typeof v === 'string';
@@ -36,11 +36,25 @@ function validateTask(raw: unknown, index: number): Task {
   if (!isNullableDate(t.endDate))
     throw new Error(`Tâche ${index} : "endDate" doit être YYYY-MM-DD ou null`);
   if (!isStatus(t.status))
-    throw new Error(`Tâche ${index} : "status" invalide (backlog | not_started | in_progress | in_review | blocked | done)`);
+    throw new Error(`Tâche ${index} : "status" invalide (backlog | not_started | in_progress | in_review | blocked | done | custom)`);
   if (t.parentId !== null && !isStr(t.parentId))
     throw new Error(`Tâche ${index} : "parentId" doit être une chaîne ou null`);
   if (typeof t.order !== 'number' || !isFinite(t.order))
     throw new Error(`Tâche ${index} : "order" doit être un nombre`);
+
+  let customStatus: CustomStatus | undefined;
+  if (t.status === 'custom') {
+    if (
+      typeof t.customStatus !== 'object' ||
+      t.customStatus === null ||
+      !isStr((t.customStatus as Record<string, unknown>).label) ||
+      !isStr((t.customStatus as Record<string, unknown>).color)
+    ) {
+      throw new Error(`Tâche ${index} : "customStatus" requis (label + color) quand status === 'custom'`);
+    }
+    const cs = t.customStatus as Record<string, unknown>;
+    customStatus = { label: cs.label as string, color: cs.color as string };
+  }
 
   return {
     id:        t.id,
@@ -49,6 +63,7 @@ function validateTask(raw: unknown, index: number): Task {
     startDate: t.startDate as string | null,
     endDate:   t.endDate as string | null,
     status:    t.status,
+    customStatus,
     parentId:  t.parentId as string | null,
     order:     t.order,
   };

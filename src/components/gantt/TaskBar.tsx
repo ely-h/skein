@@ -52,7 +52,9 @@ export default function TaskBar({ task, config, isSelected, isInGroupDrag, onSel
   });
 
   const statusColors = useThemeStore((s) => s.statusColors);
-  const bgColor      = statusColors[task.status];
+  const bgColor      = task.status === 'custom' && task.customStatus
+    ? task.customStatus.color
+    : statusColors[task.status];
   const textColor    = contrastColor(bgColor);
 
   const isMoving = isDragging || isInGroupDrag;
