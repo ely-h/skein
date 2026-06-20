@@ -216,19 +216,8 @@ export default function App() {
 
   return (
     <div className="h-screen flex flex-col bg-[#F8F7F4] dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100">
-      <header className="flex-none flex items-center justify-between px-6 h-12 border-b border-[#E8E6E1] dark:border-neutral-700 shrink-0">
+      <header className="flex-none flex items-center px-6 h-12 border-b border-[#E8E6E1] dark:border-neutral-700 shrink-0">
         <h1 className="text-base font-semibold tracking-tight">Skein</h1>
-        <button
-          type="button"
-          onClick={openNewTask}
-          disabled={!activeProjectId}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-          Nouvelle tâche
-        </button>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
@@ -317,11 +306,12 @@ export default function App() {
               onDayWidthChange={handleDayWidthChange}
               onEditTask={openEditTask}
               onDragCreate={openDragCreate}
+              onNewTask={openNewTask}
               selectedIds={selectedIds}
               onSelectChange={setSelectedIds}
             />
           ) : (
-            <TaskListView onEdit={openEditTask} />
+            <TaskListView onEdit={openEditTask} onNewTask={openNewTask} />
           )}
         </div>
         )}
