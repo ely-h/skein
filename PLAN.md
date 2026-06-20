@@ -1,4 +1,4 @@
-# PLAN — Skein
+# PLAN — Gantt Maker
 
 Application web de création de diagrammes de Gantt. Front-end uniquement, zéro backend.
 Granularité : jour. Horizon : quelques semaines à quelques mois.
@@ -58,29 +58,6 @@ interface Project {
 - [x] 11. Import JSON avec validation (refuse un JSON malformé proprement).
 - [x] 12. Polish : transitions, états de tâches, dark/light, vert menthe.
 
-## V2 — Améliorations
-
-- [x] v2/01. Fix persist : `skipHydration` + `rehydrate()` pour éviter la perte de données au refresh. Tests de non-régression.
-- [x] v2/02. UX polish : fond `#F8F7F4` light, gris `not_started` dark plus clair, barres +4px, boutons `rounded-xl`, favicon PNG.
-- [x] v2/03. Sidebar redimensionnable (180–400 px), drag bord droit, largeur persistée en localStorage, sans interférence dnd-kit.
-- [x] v2/fix. Timeline bounds dynamiques : la plage s'ajuste automatiquement pour toujours inclure toutes les tâches.
-- [x] v2/04. Plage configurable manuellement : timelineStart/End par projet, sélecteur dans la Toolbar, impossible de réduire en dessous des dates des tâches.
-- [x] v2/05. Largeur de colonne ajustable : slider Toolbar + drag bord de colonne dans le header, persistée par zoom en localStorage, toute logique via TimelineConfig.
-- [x] v2/06. Export dropdown : bouton unique "Exporter" avec menu PNG / PDF / JSON, fermeture au clic extérieur.
-- [x] v2/07. Sélection multiple : clic/Shift+clic/Ctrl+clic, highlight visuel, déplacement groupé du même delta, Échap désélectionne.
-- [x] v2/08. Bornes auto-extensibles : drag/resize d'une tâche hors des bornes manuelles → timelineStart/End mis à jour en store avec padding (7j avant, 14j après).
-- [x] v2/09. Réordonnage vertical : poignée dans la colonne des noms, drag vertical dnd-kit, champ `order` mis à jour dans le store, sans interférence avec le drag horizontal.
-
-## V4 — Corrections & polish
-
-- [x] v4/01. Auto-scroll contrôlé pendant le drag : désactivation de l'auto-scroll dnd-kit, zone de déclenchement 60 px depuis les bords, vitesse proportionnelle à la proximité (RAF), correction du delta (`delta.x + scrollDelta`) pour que la barre reste sous le pointeur.
-
-## V3 — PWA & partage
-
-- [x] v3/05. Partage par URL : encode le projet en base64 dans l'URL, vue Gantt lecture seule sur `/share`.
-- [x] v3/06. PWA : `vite-plugin-pwa`, service worker Workbox (cache offline complet, app shell + assets), manifest (icônes PNG multi-tailles, nom "Skein", thème vert menthe `#10b981`), installable desktop + mobile, routing SPA préservé.
-- [x] v3/07. Palette de couleurs : panneau dropdown dans la Toolbar (icône palette), trois color pickers un par statut, couleurs persistées dans `store/themeStore.ts` (localStorage `skein-status-colors`), appliquées instantanément aux barres Gantt, icônes de statut en vue Liste et vue lecture seule. Couleurs par défaut : gris clair / baby blue / vert menthe.
-
 ## Esthétique
 - Épuré, sobre, moderne. Coins ni trop sharp ni trop arrondis (radius ~6-8px).
 - Accent : vert menthe. États tâches : gris clair / baby blue / vert menthe.
@@ -103,3 +80,108 @@ src/
 ├── App.tsx
 └── main.tsx
 ```
+
+---
+
+## V2
+
+### Modèle de données — extensions v2
+```ts
+interface Project {
+  id: string;
+  name: string;
+  createdAt: string;
+  tasks: Task[];
+  timelineStart: string;  // YYYY-MM-DD, date de début du Gantt
+  timelineEnd: string;    // YYYY-MM-DD, date de fin du Gantt
+}
+```
+`timelineStart` et `timelineEnd` remplacent le calcul automatique de la plage.
+La plage est modifiable par l'utilisateur et peut être étendue à tout moment.
+
+### Étapes v2 (même règle : une étape = un prompt = validée avant la suivante)
+
+- [x] v2/01. Persistance : investiguer et corriger le bug de perte de données au refresh. Zustand persist doit survivre à un hard refresh. Ajouter un test de non-régression.
+- [x] v2/02. UX polish : fond light mode `#F8F7F4` (blanc chaud), gris "à faire" plus clair en dark mode, hauteur des barres de tâches légèrement augmentée (+4px), border-radius des boutons plus arrondi (~12px), favicon `logo.png`.
+- [x] v2/03. Sidebar redimensionnable : l'utilisateur peut tirer le bord droit de la sidebar pour l'élargir ou la rétrécir. Largeur min 180px, max 400px. Persister la largeur dans localStorage.
+- [x] v2/04. Plage temporelle : chaque projet a une `timelineStart` et `timelineEnd` configurables. Un sélecteur de dates dans la Toolbar permet de les modifier. La plage peut être étendue mais pas réduite en dessous des tâches existantes.
+- [x] v2/05. Largeur des colonnes ajustable : l'utilisateur peut élargir ou rétrécir la largeur d'une colonne (jour/semaine) via un slider ou drag sur le header. Persister par zoom level dans localStorage.
+- [x] v2/06. Export dropdown : remplacer les boutons export séparés par un seul bouton avec dropdown menu (PNG / PDF / JSON). Même logique d'export, juste l'UI qui change.
+- [x] v2/07. Sélection multiple + déplacement groupé : clic + shift ou clic + ctrl pour sélectionner plusieurs tâches. Déplacer le groupe d'un même delta de jours. Highlight visuel des tâches sélectionnées.
+- [x] v2/08. Bornes du Gantt : empêcher le drag/resize d'une tâche hors de la plage `timelineStart`/`timelineEnd`. Une tâche ne peut pas sortir des bornes visibles.
+- [x] v2/09. Réordonnage des tâches : drag & drop vertical dans la colonne des noms pour réordonner les tâches (changer leur `order`). Mettre à jour le store en temps réel.
+- [x] v2/10. Landing page : page d'accueil avec logo, nom, description courte, CTA "Ouvrir l'app". Style cohérent avec l'app (même tokens Tailwind). Route `/` = landing, `/app` = l'app.
+
+### Esthétique v2
+- Light mode : fond `#F8F7F4`, pas de blanc pur.
+- Dark mode : gris "à faire" (not_started) plus clair pour être lisible.
+- Boutons : border-radius ~12px.
+- Barres de tâches : hauteur augmentée de ~4px par rapport à la v1.
+- Favicon : `logo.png` à la racine dans `public/`.
+
+---
+
+## V3
+
+### Objectifs
+Partage, installabilité, fluidité, raccourcis clavier, et drag vertical des barres.
+
+### Étapes v3 (même règle : une étape = un prompt = validée avant la suivante)
+
+- [x] v3/01. Fix couleur de sélection light mode : le vert de sélection est trop clair et invisible. Remplacer par un vert grisé plus foncé et lisible (ex. `#4a7c6a` ou similaire). Auditer tous les états hover/focus/selected sur les barres et boutons en light mode.
+- [x] v3/02. Drag vertical des barres : en plus du drag horizontal (déplacement temporel), une barre peut être tirée verticalement pour changer l'ordre de la tâche (`order`). Le drag vertical ne doit pas déclencher de déplacement horizontal. Différencier les deux axes dès le début du drag (seuil de détection ~8px). S'appuyer sur le hook `useTaskDrag.ts` existant.
+- [x] v3/03. Raccourcis clavier : `Delete`/`Backspace` supprime la tâche sélectionnée (avec confirmation), `Escape` désélectionne tout et ferme les modales, `Ctrl+Z` undo (dernière action), `Ctrl+Y` redo. L'undo/redo couvre : création, suppression, déplacement, resize de tâche. Implémenter une pile d'historique dans le store (`lib/history.ts`), max 50 actions.
+- [x] v3/04. Smooth UI : passer en revue toutes les interactions et ajouter des transitions fluides. Barres de tâches : transition de couleur au changement de statut (300ms ease). Sidebar : transition d'ouverture/fermeture. Dropdown export : animation d'apparition (fade + slide léger). Hover sur les barres : légère élévation (box-shadow). Drag : curseur `grab`/`grabbing`. Aucune transition sur les mouvements de drag (ça doit rester instantané pour ne pas sembler laggy).
+- [x] v3/05. Partage via URL : un bouton "Partager" dans la Toolbar encode le projet actif en base64 dans l'URL (`/share?data=...`). La page `/share` affiche le Gantt en lecture seule avec un bouton "Importer dans Skein" qui ajoute le projet au store local. Valider et sanitizer le contenu décodé avant import (même logique que `lib/import.ts`). Attention à la limite de longueur des URLs (~8000 chars) : afficher un warning si le projet est trop grand.
+- [x] v3/06. PWA : configurer `vite-plugin-pwa` avec un service worker. Cache offline complet (app shell + assets). Manifest avec `logo.png` comme icône, nom "Skein", thème vert menthe. Installable sur desktop et mobile. Le service worker ne doit pas casser le routing React.
+
+### Esthétique v3
+- Couleur de sélection light mode : vert grisé foncé, visible sur fond `#F8F7F4`.
+- Transitions : 200-300ms ease, jamais sur les drags.
+- Curseur `grab` sur les barres, `grabbing` pendant le drag, `ew-resize` sur les bords de resize.
+- Smooth partout, sans jamais sacrifier la réactivité.
+
+---
+
+## V4
+
+### Objectifs
+Bugfixes critiques, nouveaux statuts, état vide propre, déplacement bouton nouvelle tâche.
+
+### Nouveaux statuts (extension du modèle)
+```ts
+type TaskStatus =
+  | 'backlog'        // à planifier, pas encore priorisé — gris foncé
+  | 'not_started'    // à faire — gris clair
+  | 'in_progress'    // en cours — baby blue
+  | 'in_review'      // en validation — jaune/ambre
+  | 'blocked'        // bloqué — rouge/corail
+  | 'done'           // terminé — vert menthe
+  | 'custom';        // statut personnalisé (nom + couleur libres)
+```
+Pour les statuts custom, étendre `Task` avec :
+```ts
+interface Task {
+  // ... existant
+  customStatus?: {
+    label: string;
+    color: string; // hex
+  };
+}
+```
+Les couleurs par défaut des nouveaux statuts sont overridables via `themeStore.ts` comme les autres.
+
+### Étapes v4
+
+- [x] v4/01. Bugfix drag tâche : pendant le drag horizontal d'une tâche, seule la barre se déplace. Le scroll de la timeline ne se déclenche que quand la barre atteint une zone de 60px depuis le bord gauche ou droit de la zone visible (auto-scroll on drag). Avant d'atteindre cette zone, le calendrier ne bouge pas du tout.
+- [] v4/02. État vide sans projet : quand il n'y a aucun projet, ne pas afficher la timeline vide. Afficher un écran centré avec le logo, un message court ("Aucun projet pour l'instant") et un bouton "Créer un projet". Même style que la landing page.
+- [] v4/03. Bouton nouvelle tâche : retirer le bouton "+ Nouvelle tâche" de la Toolbar. L'ajouter en bas de la liste des tâches (colonne gauche du Gantt et vue Liste), sous la dernière tâche, style discret ("+ Nouvelle tâche" en texte léger). Il ne doit apparaître nulle part ailleurs.
+- [] v4/04. Nouveaux statuts : ajouter `backlog`, `in_review`, `blocked` au type `TaskStatus`. Mettre à jour `themeStore.ts` avec leurs couleurs par défaut (backlog = gris foncé, in_review = ambre, blocked = corail/rouge). Mettre à jour tous les composants qui affichent ou filtrent par statut.
+- [] v4/05. Statut custom : l'utilisateur peut créer des statuts personnalisés (nom + couleur hex) et les supprimer. Géré dans `themeStore.ts`. Dans le formulaire de tâche, un option "Personnalisé..." ouvre un mini-form (label + color picker). Le champ `customStatus` est stocké sur la tâche. Affichage cohérent avec les autres statuts dans les barres et la vue liste.
+
+### Esthétique v4
+- Backlog : gris foncé (`#6B7280`).
+- In review : ambre (`#F59E0B`).
+- Blocked : corail (`#EF4444`).
+- Statut custom : couleur choisie par l'utilisateur.
+- Écran vide : même tokens que la landing page, centré, aéré.
