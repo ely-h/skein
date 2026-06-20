@@ -22,12 +22,13 @@ interface Props {
   onDayWidthChange: (w: number) => void;
   onEditTask:       (id: string) => void;
   onDragCreate:     (startDate: string, endDate: string) => void;
+  onNewTask:        () => void;
   selectedIds:      Set<string>;
   onSelectChange:   (ids: Set<string>) => void;
 }
 
 const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
-  { zoom, dayWidth, onDayWidthChange, onEditTask, onDragCreate, selectedIds, onSelectChange },
+  { zoom, dayWidth, onDayWidthChange, onEditTask, onDragCreate, onNewTask, selectedIds, onSelectChange },
   chartRef,
 ) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -197,6 +198,21 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
             </div>
           </SortableContext>
         </DndContext>
+
+        {/* Bouton nouvelle tâche — colonne gauche, sous les tâches */}
+        <div className="flex" style={{ width: totalW }}>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onNewTask(); }}
+            className="sticky left-0 flex-none flex items-center gap-1.5 px-4 py-2 text-sm text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
+            style={{ width: LABEL_W }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Nouvelle tâche
+          </button>
+        </div>
 
       </div>
     </div>
