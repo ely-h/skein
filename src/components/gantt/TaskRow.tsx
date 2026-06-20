@@ -1,17 +1,24 @@
 import type { Task } from '../../types/index';
 import type { TimelineConfig } from '../../lib/timeline';
+import type { ActiveDrag } from '../../hooks/useBarDrag';
 import { ROW_H } from './constants';
 import TaskBar from './TaskBar';
 
+type DragType = 'move' | 'resize-left' | 'resize-right';
+
 interface Props {
-  task:          Task;
-  config:        TimelineConfig;
-  isSelected:    boolean;
-  isInGroupDrag: boolean;
-  onSelect:      (id: string, additive: boolean) => void;
+  task:             Task;
+  config:           TimelineConfig;
+  isSelected:       boolean;
+  activeDrag:       ActiveDrag | null;
+  dragJustEndedRef: React.RefObject<boolean>;
+  onPointerDown:    (e: React.PointerEvent, taskId: string, type: DragType) => void;
+  onSelect:         (id: string, additive: boolean) => void;
 }
 
-export default function TaskRow({ task, config, isSelected, isInGroupDrag, onSelect }: Props) {
+export default function TaskRow({
+  task, config, isSelected, activeDrag, dragJustEndedRef, onPointerDown, onSelect,
+}: Props) {
   const isScheduled = task.startDate !== null && task.endDate !== null;
 
   return (
@@ -28,7 +35,9 @@ export default function TaskRow({ task, config, isSelected, isInGroupDrag, onSel
             task={task as Task & { startDate: string; endDate: string }}
             config={config}
             isSelected={isSelected}
-            isInGroupDrag={isInGroupDrag}
+            activeDrag={activeDrag}
+            dragJustEndedRef={dragJustEndedRef}
+            onPointerDown={onPointerDown}
             onSelect={onSelect}
           />
         )}

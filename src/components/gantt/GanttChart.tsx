@@ -9,6 +9,7 @@ import { resolveTimelineBounds, computeRequiredBoundsExpansion } from '../../lib
 import type { ZoomLevel } from '../../types/index';
 import { useDragCreate } from '../../hooks/useDragCreate';
 import { useTaskDrag } from '../../hooks/useTaskDrag';
+import { useBarDrag } from '../../hooks/useBarDrag';
 import { useLabelResize } from '../../hooks/useLabelResize';
 import { HEADER_WEEK_H, HEADER_DAY_H, ROW_H, ZOOM_CONFIGS } from './constants';
 import GanttHeader from './GanttHeader';
@@ -99,16 +100,21 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
     clearResult();
   }, [result, onDragCreate, clearResult]);
 
+  // Drag horizontal des barres (move + resize) — ghost drag, commit au drop
+  const { activeDrag, onBarPointerDown, dragJustEndedRef } =
+    useBarDrag(config, selectedIds, scrollRef);
+
+  // Réordonnage vertical via le grip handle (dnd-kit uniquement)
   const {
     sensors,
     onDragStart,
     onDragMove,
     onDragEnd:          taskDragEnd,
-    isGroupDragging,
     isVerticalDragging,
     verticalTargetIndex,
     popVerticalReorder,
-  } = useTaskDrag(config, selectedIds, scrollRef, 0);
+  } = useTaskDrag();
+
 
   const handleDragEnd = useCallback((event: DragEndEvent): void => {
     taskDragEnd();
@@ -224,7 +230,9 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
                     task={task}
                     config={config}
                     isSelected={selectedIds.has(task.id)}
-                    isInGroupDrag={isGroupDragging && selectedIds.has(task.id)}
+                    activeDrag={activeDrag}
+                    dragJustEndedRef={dragJustEndedRef}
+                    onPointerDown={onBarPointerDown}
                     onSelect={handleSelect}
                   />
                 ))
