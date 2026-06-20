@@ -15,7 +15,10 @@ async function captureGantt(element: HTMLElement): Promise<string> {
   const contentDiv  = element.querySelector('[data-timeline-content]') as HTMLElement | null;
 
   // Mesurer AVANT de toucher aux styles
-  const contentW = scrollPanel ? scrollPanel.scrollWidth : element.scrollWidth;
+  const labelPanel = element.querySelector('[data-label-panel]') as HTMLElement | null;
+  const labelW  = labelPanel  ? labelPanel.offsetWidth   : 0;
+  const timelineW = contentDiv ? contentDiv.offsetWidth  : (scrollPanel ? scrollPanel.scrollWidth : element.scrollWidth);
+  const contentW = labelW + timelineW;
   const contentH = contentDiv  ? contentDiv.offsetHeight : element.scrollHeight;
 
   // Snapshot

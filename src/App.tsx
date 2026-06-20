@@ -321,6 +321,7 @@ export default function App() {
               dayWidth={dayWidth}
               onDayWidthChange={handleDayWidthChange}
               onEditTask={openEditTask}
+              onDeleteTask={setDeleteConfirmId}
               onDragCreate={openDragCreate}
               selectedIds={selectedIds}
               onSelectChange={setSelectedIds}

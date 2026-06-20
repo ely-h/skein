@@ -23,13 +23,14 @@ interface Props {
   dayWidth:         number;
   onDayWidthChange: (w: number) => void;
   onEditTask:       (id: string) => void;
+  onDeleteTask:     (id: string) => void;
   onDragCreate:     (startDate: string, endDate: string) => void;
   selectedIds:      Set<string>;
   onSelectChange:   (ids: Set<string>) => void;
 }
 
 const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
-  { zoom, dayWidth, onDayWidthChange, onEditTask, onDragCreate, selectedIds, onSelectChange },
+  { zoom, dayWidth, onDayWidthChange, onEditTask, onDeleteTask, onDragCreate, selectedIds, onSelectChange },
   chartRef,
 ) {
   const scrollRef     = useRef<HTMLDivElement>(null);
@@ -145,6 +146,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
 
         {/* ── Panel gauche : colonne des tâches ── */}
         <div
+          data-label-panel
           className="relative flex-none flex flex-col bg-[var(--bg-base)] dark:bg-[var(--bg-base)] border-r border-[var(--border)] dark:border-[var(--border)]"
           style={{ width: labelW }}
         >
@@ -165,6 +167,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
                     key={task.id}
                     task={task}
                     onEdit={onEditTask}
+                    onDelete={onDeleteTask}
                     isSelected={selectedIds.has(task.id)}
                     onSelect={handleSelect}
                   />
