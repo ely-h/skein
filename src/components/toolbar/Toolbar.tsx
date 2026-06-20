@@ -106,7 +106,7 @@ export default function Toolbar({
   const btnIcon  = 'p-1.5 rounded-xl transition-colors text-neutral-500 dark:text-neutral-400 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-100';
 
   return (
-    <div className="flex-none flex items-center gap-2 px-4 py-2 border-b border-[#E8E6E1] dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800">
+    <div className="flex-none flex items-center gap-2 px-4 h-10 border-b border-[#E8E6E1] dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800">
 
       {/* Sélecteur de vue : Gantt / Liste */}
       <div className="flex items-center gap-1">

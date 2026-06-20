@@ -48,7 +48,7 @@ export default function ProjectSidebar() {
     >
 
       {/* En-tête sidebar */}
-      <div className="flex-none px-4 py-3 border-b border-[#E8E6E1] dark:border-neutral-700">
+      <div className="flex-none flex items-center px-4 h-10 border-b border-[#E8E6E1] dark:border-neutral-700">
         <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
           Projets
         </span>
