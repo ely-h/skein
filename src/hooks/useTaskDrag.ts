@@ -56,9 +56,10 @@ export function useTaskDrag(
   const pendingReorderRef      = useRef<VerticalReorder | null>(null);
   const pointerMoveCleanupRef  = useRef<(() => void) | null>(null);
 
-  const initialScrollRef = useRef<number>(0);
-  const scrollDeltaRef   = useRef<number>(0);
-  const pointerXRef      = useRef<number>(0);
+  const initialScrollRef  = useRef<number>(0);
+  const scrollDeltaRef    = useRef<number>(0);
+  const pointerXRef       = useRef<number>(0);
+  const lastPointerXRef   = useRef<number>(0);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
@@ -123,6 +124,7 @@ export function useTaskDrag(
 
     initialScrollRef.current = scrollRef.current?.scrollLeft ?? 0;
     scrollDeltaRef.current   = 0;
+    lastPointerXRef.current  = 0;
 
     function onPointerMove(e: PointerEvent): void {
       pointerXRef.current = e.clientX;
@@ -163,19 +165,20 @@ export function useTaskDrag(
     if (o.axis === 'horizontal') {
       const el = scrollRef.current;
 
-      // Auto-scroll synchrone : on scroll directement dans le handler pour
-      // éviter le pointercancel que déclenche un RAF modifiant scrollLeft
-      // indépendamment du cycle d'événements de dnd-kit.
+      // Auto-scroll synchrone dans le sens du mouvement du pointeur uniquement.
+      // Conditionner au sens évite la boucle d'accélération : si le pointeur
+      // est dans la zone droite mais que l'utilisateur recule, on ne scroll pas.
       if (el && pointerXRef.current !== 0) {
-        const rect      = el.getBoundingClientRect();
-        const px        = pointerXRef.current;
-        const rightDist = rect.right - px;
-        const leftDist  = px - (rect.left + LABEL_W);
+        const rect           = el.getBoundingClientRect();
+        const px             = pointerXRef.current;
+        const pointerDirX    = px - lastPointerXRef.current; // positif = vers la droite
+        const rightDist      = rect.right - px;
+        const leftDist       = px - (rect.left + LABEL_W);
 
         let speed = 0;
-        if (rightDist > 0 && rightDist < SCROLL_ZONE) {
+        if (pointerDirX > 0 && rightDist > 0 && rightDist < SCROLL_ZONE) {
           speed = MAX_SPEED * (1 - rightDist / SCROLL_ZONE);
-        } else if (leftDist > 0 && leftDist < SCROLL_ZONE) {
+        } else if (pointerDirX < 0 && leftDist > 0 && leftDist < SCROLL_ZONE) {
           speed = -MAX_SPEED * (1 - leftDist / SCROLL_ZONE);
         }
 
@@ -184,7 +187,8 @@ export function useTaskDrag(
         }
       }
 
-      scrollDeltaRef.current = (el?.scrollLeft ?? initialScrollRef.current) - initialScrollRef.current;
+      lastPointerXRef.current = pointerXRef.current;
+      scrollDeltaRef.current  = (el?.scrollLeft ?? initialScrollRef.current) - initialScrollRef.current;
       applyHorizontalMove(delta, scrollDeltaRef.current);
 
     } else if (o.axis === 'vertical') {
