@@ -66,7 +66,7 @@ export default function TaskLabelRow({ task, onEdit, isSelected, onSelect }: Pro
         'group flex items-center gap-1.5 px-2 border-b border-[#EDEBE5] dark:border-neutral-700/60 transition-colors cursor-default select-none',
         isSelected
           ? 'bg-[#D0E5DF] dark:bg-emerald-950/30'
-          : 'bg-[#F8F7F4] dark:bg-neutral-900 hover:bg-[#EDE9E3] dark:hover:bg-neutral-800',
+          : 'bg-[#F8F7F4] dark:bg-neutral-800 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700/50',
         isDragging ? 'opacity-60 shadow-md' : '',
       ].join(' ')}
       style={{

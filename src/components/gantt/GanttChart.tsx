@@ -145,7 +145,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
 
         {/* ── Panel gauche : colonne des tâches ── */}
         <div
-          className="relative flex-none flex flex-col bg-[#F8F7F4] dark:bg-neutral-900 border-r border-[#E8E6E1] dark:border-neutral-700"
+          className="relative flex-none flex flex-col bg-[#F8F7F4] dark:bg-neutral-800 border-r border-[#E8E6E1] dark:border-neutral-700"
           style={{ width: labelW }}
         >
           {/* En-tête colonne */}
