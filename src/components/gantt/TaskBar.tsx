@@ -4,7 +4,6 @@ import { taskToBar } from '../../lib/timeline';
 import type { TimelineConfig } from '../../lib/timeline';
 import type { Task } from '../../types/index';
 import { useThemeStore } from '../../store/themeStore';
-import { contrastColor } from '../../lib/color';
 
 // Transitions actives uniquement au repos — pendant le drag tout doit être instantané.
 const TRANSITION_IDLE   = 'transition-[background-color,box-shadow,opacity,color] duration-300 ease-out';
@@ -39,7 +38,6 @@ interface Props {
   onSelect:      (id: string, additive: boolean) => void;
 }
 
-const MIN_WIDTH_FOR_LABEL = 48;
 
 export default function TaskBar({ task, config, isSelected, isInGroupDrag, onSelect }: Props) {
   const { x, width } = taskToBar(
@@ -55,7 +53,6 @@ export default function TaskBar({ task, config, isSelected, isInGroupDrag, onSel
   const bgColor      = task.status === 'custom' && task.customStatus
     ? task.customStatus.color
     : statusColors[task.status];
-  const textColor    = contrastColor(bgColor);
 
   const isMoving = isDragging || isInGroupDrag;
 
@@ -83,18 +80,6 @@ export default function TaskBar({ task, config, isSelected, isInGroupDrag, onSel
       <ResizeHandle id={`resize-left-${task.id}`}  side="left"  />
       <ResizeHandle id={`resize-right-${task.id}`} side="right" />
 
-      {width >= MIN_WIDTH_FOR_LABEL && (
-        <span
-          className={[
-            'absolute inset-x-3 inset-y-0 flex items-center text-[11px] font-medium',
-            'truncate pointer-events-none select-none',
-            isMoving ? TRANSITION_MOVING : 'transition-colors duration-300 ease-out',
-          ].join(' ')}
-          style={{ color: textColor }}
-        >
-          {task.name}
-        </span>
-      )}
     </div>
   );
 }
