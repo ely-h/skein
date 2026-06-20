@@ -12,7 +12,7 @@ import type { Task } from '../types/index';
 
 const AXIS_THRESHOLD = 8;
 const SCROLL_ZONE    = 60;
-const MAX_SPEED      = 12;
+const MAX_SPEED      = 14;
 
 type DragType = 'move' | 'resize-left' | 'resize-right';
 type DragAxis = 'undecided' | 'horizontal' | 'vertical';
@@ -56,12 +56,9 @@ export function useTaskDrag(
   const pendingReorderRef      = useRef<VerticalReorder | null>(null);
   const pointerMoveCleanupRef  = useRef<(() => void) | null>(null);
 
-  // Refs pour l'auto-scroll (lecture synchrone dans le RAF, sans re-render)
-  const rafRef           = useRef<number | null>(null);
   const initialScrollRef = useRef<number>(0);
   const scrollDeltaRef   = useRef<number>(0);
   const pointerXRef      = useRef<number>(0);
-  const latestDeltaRef   = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
@@ -99,47 +96,6 @@ export function useTaskDrag(
     }
   }, [config.dayWidth, updateTask]);
 
-  const stopAutoScroll = useCallback((): void => {
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-  }, []);
-
-  const startAutoScroll = useCallback((): void => {
-    if (rafRef.current !== null) return;
-
-    const tick = (): void => {
-      const el = scrollRef.current;
-      if (!el) return;
-
-      const rect = el.getBoundingClientRect();
-      const px   = pointerXRef.current;
-
-      // Zone droite : 60px avant le bord droit du conteneur
-      const rightDist = rect.right - px;
-      // Zone gauche : 60px après la colonne des noms (le bord gauche effectif de la timeline)
-      const leftDist  = px - (rect.left + LABEL_W);
-
-      let speed = 0;
-      if (rightDist > 0 && rightDist < SCROLL_ZONE) {
-        speed = MAX_SPEED * (1 - rightDist / SCROLL_ZONE);
-      } else if (leftDist > 0 && leftDist < SCROLL_ZONE) {
-        speed = -MAX_SPEED * (1 - leftDist / SCROLL_ZONE);
-      }
-
-      if (speed !== 0) {
-        el.scrollLeft += speed;
-        scrollDeltaRef.current = el.scrollLeft - initialScrollRef.current;
-        applyHorizontalMove(latestDeltaRef.current, scrollDeltaRef.current);
-      }
-
-      rafRef.current = requestAnimationFrame(tick);
-    };
-
-    rafRef.current = requestAnimationFrame(tick);
-  }, [scrollRef, applyHorizontalMove]);
-
   const onDragStart = useCallback(({ active }: DragStartEvent): void => {
     const parsed = parseDragId(String(active.id));
     if (!parsed) return;
@@ -167,7 +123,6 @@ export function useTaskDrag(
 
     initialScrollRef.current = scrollRef.current?.scrollLeft ?? 0;
     scrollDeltaRef.current   = 0;
-    latestDeltaRef.current   = { x: 0, y: 0 };
 
     function onPointerMove(e: PointerEvent): void {
       pointerXRef.current = e.clientX;
@@ -191,15 +146,12 @@ export function useTaskDrag(
     const o = stateRef.current;
     if (!o) return;
 
-    latestDeltaRef.current = delta;
-
     if (o.axis === 'undecided') {
       const absX = Math.abs(delta.x);
       const absY = Math.abs(delta.y);
       if (absY >= AXIS_THRESHOLD && absY > absX) {
         o.axis = 'vertical';
         setIsVerticalDragging(true);
-        stopAutoScroll();
         return;
       } else if (absX >= AXIS_THRESHOLD) {
         o.axis = 'horizontal';
@@ -209,9 +161,32 @@ export function useTaskDrag(
     }
 
     if (o.axis === 'horizontal') {
-      scrollDeltaRef.current = (scrollRef.current?.scrollLeft ?? initialScrollRef.current) - initialScrollRef.current;
+      const el = scrollRef.current;
+
+      // Auto-scroll synchrone : on scroll directement dans le handler pour
+      // éviter le pointercancel que déclenche un RAF modifiant scrollLeft
+      // indépendamment du cycle d'événements de dnd-kit.
+      if (el && pointerXRef.current !== 0) {
+        const rect      = el.getBoundingClientRect();
+        const px        = pointerXRef.current;
+        const rightDist = rect.right - px;
+        const leftDist  = px - (rect.left + LABEL_W);
+
+        let speed = 0;
+        if (rightDist > 0 && rightDist < SCROLL_ZONE) {
+          speed = MAX_SPEED * (1 - rightDist / SCROLL_ZONE);
+        } else if (leftDist > 0 && leftDist < SCROLL_ZONE) {
+          speed = -MAX_SPEED * (1 - leftDist / SCROLL_ZONE);
+        }
+
+        if (speed !== 0) {
+          el.scrollLeft += speed;
+        }
+      }
+
+      scrollDeltaRef.current = (el?.scrollLeft ?? initialScrollRef.current) - initialScrollRef.current;
       applyHorizontalMove(delta, scrollDeltaRef.current);
-      startAutoScroll();
+
     } else if (o.axis === 'vertical') {
       const tasks      = useTaskStore.getState().tasks;
       const sorted     = [...tasks].sort((a, b) => a.order - b.order);
@@ -224,10 +199,9 @@ export function useTaskDrag(
       verticalTargetIndexRef.current = targetIdx;
       setVerticalTargetIndex(targetIdx);
     }
-  }, [applyHorizontalMove, startAutoScroll, stopAutoScroll, scrollRef]);
+  }, [applyHorizontalMove, scrollRef]);
 
   const onDragEnd = useCallback((): void => {
-    stopAutoScroll();
     pointerMoveCleanupRef.current?.();
     pointerMoveCleanupRef.current = null;
 
@@ -254,7 +228,7 @@ export function useTaskDrag(
     setIsGroupDragging(false);
     setIsVerticalDragging(false);
     setVerticalTargetIndex(null);
-  }, [stopAutoScroll]);
+  }, []);
 
   const popVerticalReorder = useCallback((): VerticalReorder | null => {
     const r = pendingReorderRef.current;
