@@ -15,24 +15,14 @@ import { exportToPng, exportToPdf, exportToJson } from './lib/export';
 import { parseProjectJson } from './lib/import';
 import { buildShareUrl } from './lib/share';
 import { useDarkMode } from './hooks/useDarkMode';
+import EmptyState from './components/ui/EmptyState';
 import type { ZoomLevel, ViewMode } from './types/index';
-
-function seedIfEmpty(): void {
-  const { projects, addProject } = useProjectStore.getState();
-  if (projects.length > 0) return;
-  addProject('Refonte site web');
-  const { addTask } = useTaskStore.getState();
-  addTask({ name: 'Rédaction contenu',   startDate: '2026-06-01', endDate: '2026-06-14', status: 'done' });
-  addTask({ name: 'Maquettes UI',        startDate: '2026-06-01', endDate: '2026-06-07', status: 'in_progress' });
-  addTask({ name: 'Développement front', startDate: '2026-06-08', endDate: '2026-06-21', status: 'not_started' });
-  addTask({ name: 'Tests & recette',     startDate: '2026-06-15', endDate: '2026-06-24', status: 'not_started' });
-  addTask({ name: 'Mise en production',  startDate: '2026-06-25', endDate: '2026-06-26', status: 'not_started' });
-}
 
 interface DragDates { start: string; end: string }
 
 export default function App() {
   const activeProjectId   = useProjectStore((s) => s.activeProjectId);
+  const hasProjects       = useProjectStore((s) => s.projects.length > 0);
   const activeProject     = useProjectStore((s) =>
     s.projects.find((p) => p.id === s.activeProjectId) ?? null
   );
@@ -99,8 +89,6 @@ export default function App() {
     setDeleteConfirmId(null);
     useHistoryStore.getState().reset();
   }, [activeProjectId]);
-
-  useEffect(() => { seedIfEmpty(); }, []);
 
   const closeModal = useCallback((): void => {
     setModalOpen(false);
@@ -246,6 +234,9 @@ export default function App() {
       <div className="flex flex-1 overflow-hidden">
         <ProjectSidebar />
 
+        {!hasProjects ? (
+          <EmptyState />
+        ) : (
         <div className="flex flex-col flex-1 overflow-hidden">
           <Toolbar
             view={view}            onViewChange={setView}
@@ -333,6 +324,7 @@ export default function App() {
             <TaskListView onEdit={openEditTask} />
           )}
         </div>
+        )}
       </div>
 
       <input
