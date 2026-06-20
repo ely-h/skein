@@ -192,10 +192,11 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
         {/* ── Panel droit : timeline ── */}
         <div
           ref={scrollRef}
+          data-timeline-scroll
           className="flex-1 overflow-auto select-none"
           onScroll={handleScrollSync}
         >
-          <div style={{ width: totalW }}>
+          <div data-timeline-content style={{ width: totalW }}>
             {/* Header timeline */}
             <div
               className="sticky top-0 z-20 bg-[var(--bg-base)] dark:bg-[var(--bg-base)] border-b-2 border-[var(--border)] dark:border-[var(--border)]"

@@ -3,15 +3,50 @@ import jsPDF from 'jspdf';
 import type { Project } from '../types/index';
 
 export async function exportToPng(element: HTMLElement, filename: string): Promise<void> {
-  const dataUrl = await toPng(element, { pixelRatio: 2 });
+  const dataUrl = await captureGantt(element);
   const link = document.createElement('a');
   link.download = `${filename}.png`;
   link.href = dataUrl;
   link.click();
 }
 
+async function captureGantt(element: HTMLElement): Promise<string> {
+  const scrollPanel = element.querySelector('[data-timeline-scroll]') as HTMLElement | null;
+  const contentDiv  = element.querySelector('[data-timeline-content]') as HTMLElement | null;
+
+  // Mesurer AVANT de toucher aux styles
+  const contentW = scrollPanel ? scrollPanel.scrollWidth : element.scrollWidth;
+  const contentH = contentDiv  ? contentDiv.offsetHeight : element.scrollHeight;
+
+  // Snapshot
+  const outerCss  = element.style.cssText;
+  const panelCss  = scrollPanel?.style.cssText ?? '';
+
+  // Forcer les dimensions exactes du contenu
+  element.style.cssText = `overflow:visible;flex:none;width:${contentW}px;height:${contentH}px;`;
+
+  if (scrollPanel) {
+    scrollPanel.style.cssText = `flex:none;overflow:visible;width:${contentW}px;height:${contentH}px;`;
+  }
+
+  // Forcer le reflow avant la capture
+  void element.offsetHeight;
+
+  const dataUrl = await toPng(element, {
+    pixelRatio: 2,
+    width:  contentW,
+    height: contentH,
+  });
+
+  // Restaurer
+  element.style.cssText = outerCss;
+  if (scrollPanel) scrollPanel.style.cssText = panelCss;
+
+  return dataUrl;
+}
+
 export async function exportToPdf(element: HTMLElement, projectName: string): Promise<void> {
-  const dataUrl = await toPng(element, { pixelRatio: 2 });
+  const dataUrl = await captureGantt(element);
 
   await new Promise<void>((resolve, reject) => {
     const img = new Image();
