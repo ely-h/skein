@@ -4,9 +4,15 @@ export type TaskStatus =
   | 'in_progress'
   | 'in_review'
   | 'blocked'
-  | 'done';
+  | 'done'
+  | 'custom';
 export type ZoomLevel = 'day' | 'week' | 'month';
 export type ViewMode  = 'gantt' | 'list';
+
+export interface CustomStatus {
+  label: string;
+  color: string; // hex
+}
 
 export interface Task {
   id: string;
@@ -15,6 +21,7 @@ export interface Task {
   startDate: string | null; // ISO 'YYYY-MM-DD' | null = pas planifiée (liste seule)
   endDate: string | null;   // ISO, inclusif | null
   status: TaskStatus;
+  customStatus?: CustomStatus; // renseigné uniquement si status === 'custom'
   parentId: string | null;  // null en v1, porte ouverte hiérarchie
   order: number;
 }

@@ -177,7 +177,7 @@ Les couleurs par défaut des nouveaux statuts sont overridables via `themeStore.
 - [x] v4/02. État vide sans projet : quand il n'y a aucun projet, ne pas afficher la timeline vide. Afficher un écran centré avec le logo, un message court ("Aucun projet pour l'instant") et un bouton "Créer un projet". Même style que la landing page.
 - [x] v4/03. Bouton nouvelle tâche : retirer le bouton "+ Nouvelle tâche" de la Toolbar. L'ajouter en bas de la liste des tâches (colonne gauche du Gantt et vue Liste), sous la dernière tâche, style discret ("+ Nouvelle tâche" en texte léger). Il ne doit apparaître nulle part ailleurs.
 - [x] v4/04. Nouveaux statuts : ajouter `backlog`, `in_review`, `blocked` au type `TaskStatus`. Mettre à jour `themeStore.ts` avec leurs couleurs par défaut (backlog = gris foncé, in_review = ambre, blocked = corail/rouge). Mettre à jour tous les composants qui affichent ou filtrent par statut.
-- [] v4/05. Statut custom : l'utilisateur peut créer des statuts personnalisés (nom + couleur hex) et les supprimer. Géré dans `themeStore.ts`. Dans le formulaire de tâche, un option "Personnalisé..." ouvre un mini-form (label + color picker). Le champ `customStatus` est stocké sur la tâche. Affichage cohérent avec les autres statuts dans les barres et la vue liste.
+- [x] v4/05. Statut custom : l'utilisateur peut créer des statuts personnalisés (nom + couleur hex) et les supprimer. Géré dans `themeStore.ts`. Dans le formulaire de tâche, un option "Personnalisé..." ouvre un mini-form (label + color picker). Le champ `customStatus` est stocké sur la tâche. Affichage cohérent avec les autres statuts dans les barres et la vue liste.
 
 ### Esthétique v4
 - Backlog : gris foncé (`#6B7280`).

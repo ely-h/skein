@@ -14,11 +14,12 @@ const NEXT_STATUS: Record<TaskStatus, TaskStatus> = {
   in_review:   'done',
   blocked:     'in_progress',
   done:        'not_started',
+  custom:      'not_started',
 };
 
-function StatusIcon({ status }: { status: TaskStatus }) {
+function StatusIcon({ status, customColor }: { status: TaskStatus; customColor?: string }) {
   const statusColors = useThemeStore((s) => s.statusColors);
-  const color = statusColors[status];
+  const color = status === 'custom' && customColor ? customColor : statusColors[status];
 
   if (status === 'done') {
     return (
@@ -57,6 +58,14 @@ function StatusIcon({ status }: { status: TaskStatus }) {
       <div
         className="w-4 h-4 rounded-full border-2 flex-none"
         style={{ borderColor: color, backgroundColor: `${color}30` }}
+      />
+    );
+  }
+  if (status === 'custom') {
+    return (
+      <div
+        className="w-4 h-4 rounded-full flex-none"
+        style={{ backgroundColor: color }}
       />
     );
   }
@@ -113,7 +122,7 @@ export default function TaskListItem({ task, onEdit }: Props) {
         title="Changer le statut"
         className="flex-none"
       >
-        <StatusIcon status={task.status} />
+        <StatusIcon status={task.status} customColor={task.customStatus?.color} />
       </button>
 
       {/* Nom de la tâche — éditable en ligne */}

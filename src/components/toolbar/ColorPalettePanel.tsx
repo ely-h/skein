@@ -9,6 +9,7 @@ const STATUS_LABELS: Record<TaskStatus, string> = {
   in_review:   'En validation',
   blocked:     'Bloqué',
   done:        'Terminé',
+  custom:      'Personnalisé',
 };
 
 const STATUSES: TaskStatus[] = ['backlog', 'not_started', 'in_progress', 'in_review', 'blocked', 'done'];
@@ -29,9 +30,11 @@ export default function ColorPalettePanel() {
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const statusColors   = useThemeStore((s) => s.statusColors);
-  const setStatusColor = useThemeStore((s) => s.setStatusColor);
-  const resetColors    = useThemeStore((s) => s.resetColors);
+  const statusColors      = useThemeStore((s) => s.statusColors);
+  const setStatusColor    = useThemeStore((s) => s.setStatusColor);
+  const resetColors       = useThemeStore((s) => s.resetColors);
+  const customStatuses    = useThemeStore((s) => s.customStatuses);
+  const removeCustomStatus = useThemeStore((s) => s.removeCustomStatus);
 
   useEffect(() => {
     if (!open) return;
@@ -92,6 +95,40 @@ export default function ColorPalettePanel() {
             </div>
           </label>
         ))}
+
+        {customStatuses.length > 0 && (
+          <>
+            <p className="px-3 pt-3 pb-1.5 text-[10px] font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wider select-none border-t border-[#E8E6E1] dark:border-neutral-700 mt-1.5">
+              Statuts personnalisés
+            </p>
+            {customStatuses.map((cs) => (
+              <div
+                key={cs.label}
+                className="flex items-center justify-between px-3 py-1.5"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <div
+                    className="w-3 h-3 rounded-full flex-none"
+                    style={{ backgroundColor: cs.color }}
+                  />
+                  <span className="text-xs text-neutral-700 dark:text-neutral-300 truncate">
+                    {cs.label}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeCustomStatus(cs.label)}
+                  title="Supprimer"
+                  className="flex-none ml-2 text-neutral-300 dark:text-neutral-600 hover:text-red-400 transition-colors"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </>
+        )}
 
         <div className="mt-1.5 px-3 pt-1.5 border-t border-[#E8E6E1] dark:border-neutral-700">
           <button
