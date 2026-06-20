@@ -87,6 +87,9 @@ export default function Toolbar({
   const [exportOpen, setExportOpen] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
 
+  const [zoomOpen, setZoomOpen] = useState(false);
+  const zoomRef  = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!exportOpen) return;
     function onOutside(e: MouseEvent) {
@@ -97,6 +100,17 @@ export default function Toolbar({
     document.addEventListener('mousedown', onOutside);
     return () => document.removeEventListener('mousedown', onOutside);
   }, [exportOpen]);
+
+  useEffect(() => {
+    if (!zoomOpen) return;
+    function onOutside(e: MouseEvent) {
+      if (zoomRef.current && !zoomRef.current.contains(e.target as Node)) {
+        setZoomOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', onOutside);
+    return () => document.removeEventListener('mousedown', onOutside);
+  }, [zoomOpen]);
 
   const btnBase  = 'px-3 py-1 text-xs font-medium rounded-xl transition-colors';
   const btnGhost = `${btnBase} text-neutral-600 dark:text-neutral-400 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700`;
@@ -124,27 +138,45 @@ export default function Toolbar({
         ))}
       </div>
 
-      {/* Zoom (vue Gantt uniquement) */}
+      {/* Zoom (vue Gantt uniquement) — dropdown */}
       {view === 'gantt' && (
         <>
           {DIVIDER}
-          <span className="text-xs text-neutral-400 dark:text-neutral-500 select-none">Zoom</span>
-          <div className="flex items-center gap-1">
-            {(['day', 'week', 'month'] as ZoomLevel[]).map((z) => (
-              <button
-                key={z}
-                type="button"
-                onClick={() => onZoomChange(z)}
-                className={[
-                  btnBase,
-                  zoom === z
-                    ? 'bg-emerald-500 text-white'
-                    : 'text-neutral-600 dark:text-neutral-400 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700',
-                ].join(' ')}
-              >
-                {ZOOM_LABELS[z]}
-              </button>
-            ))}
+          <div ref={zoomRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setZoomOpen((o) => !o)}
+              className={`${btnGhost} flex items-center gap-1`}
+            >
+              {ZOOM_LABELS[zoom]}
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+
+            <div className={[
+              'absolute left-0 top-full mt-1 z-50 min-w-[100px] rounded-xl border border-[#E8E6E1] dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800 shadow-lg py-1 overflow-hidden',
+              'transition-all duration-150 ease-out origin-top-left',
+              zoomOpen
+                ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
+                : 'opacity-0 scale-95 -translate-y-1 pointer-events-none',
+            ].join(' ')}>
+              {(['day', 'week', 'month'] as ZoomLevel[]).map((z) => (
+                <button
+                  key={z}
+                  type="button"
+                  onClick={() => { onZoomChange(z); setZoomOpen(false); }}
+                  className={[
+                    'w-full text-left px-3 py-1.5 text-xs transition-colors',
+                    zoom === z
+                      ? 'text-emerald-600 dark:text-emerald-400 font-medium'
+                      : 'text-neutral-700 dark:text-neutral-300 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700',
+                  ].join(' ')}
+                >
+                  {ZOOM_LABELS[z]}
+                </button>
+              ))}
+            </div>
           </div>
         </>
       )}
