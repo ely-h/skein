@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useProjectStore } from './store/projectStore';
 import { useTaskStore } from './store/taskStore';
 import { useHistoryStore } from './store/historyStore';
-import { resolveTimelineBounds, DAY_WIDTH_BOUNDS } from './lib/timeline';
+import { resolveTimelineBounds, DAY_WIDTH_BOUNDS, validateTimelineRange } from './lib/timeline';
 import { ZOOM_CONFIGS } from './components/gantt/constants';
 import { useColumnWidth } from './hooks/useColumnWidth';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
@@ -172,6 +172,10 @@ export default function App() {
 
   const handleTimelineRangeChange = useCallback((start: string | null, end: string | null): void => {
     if (!activeProject) return;
+    if (start !== null && end !== null) {
+      const err = validateTimelineRange(start, end);
+      if (err) { setImportError(err); setTimeout(() => setImportError(null), 6000); return; }
+    }
     setTimelineRange(activeProject.id, start, end);
   }, [activeProject, setTimelineRange]);
 

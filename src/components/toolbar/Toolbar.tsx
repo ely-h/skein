@@ -177,7 +177,6 @@ export default function Toolbar({
           <input
             type="date"
             value={effectiveStart}
-            max={taskEarliestDate ?? undefined}
             onChange={(e) =>
               onTimelineRangeChange(e.target.value || null, timelineEnd)
             }
@@ -187,7 +186,6 @@ export default function Toolbar({
           <input
             type="date"
             value={effectiveEnd}
-            min={taskLatestDate ?? undefined}
             onChange={(e) =>
               onTimelineRangeChange(timelineStart, e.target.value || null)
             }

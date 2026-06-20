@@ -1,6 +1,9 @@
 import { addDays, diffInDays, today } from './dates';
 import type { ZoomLevel } from '../types/index';
 
+export const MIN_TIMELINE_DAYS = 7;    // 1 semaine
+export const MAX_TIMELINE_DAYS = 365;  // 52 semaines
+
 export const DAY_WIDTH_BOUNDS: Record<ZoomLevel, { min: number; max: number }> = {
   day:   { min: 20, max: 80 },
   week:  { min: 6,  max: 30 },
@@ -68,20 +71,41 @@ export function resolveTimelineBounds(
   let start = timelineStart ?? auto.startDate;
   let end   = timelineEnd   ?? autoEnd;
 
-  // Clamp : la plage ne peut pas exclure une tâche existante
-  const dated = tasks.filter(
-    (t): t is { startDate: string; endDate: string } =>
-      t.startDate !== null && t.endDate !== null,
-  );
-  if (dated.length > 0) {
-    const taskStart = [...dated.map((t) => t.startDate)].sort()[0];
-    const taskEnd   = [...dated.map((t) => t.endDate)].sort().at(-1)!;
-    if (start > taskStart) start = taskStart;
-    if (end   < taskEnd)   end   = taskEnd;
+  // Clamp uniquement quand UNE SEULE borne est manuelle (l'autre est auto).
+  // Quand les deux bornes sont fixées manuellement, on respecte la plage telle quelle —
+  // les tâches hors plage ne s'affichent tout simplement pas dans le Gantt.
+  const bothManual = timelineStart !== null && timelineEnd !== null;
+  if (!bothManual) {
+    const dated = tasks.filter(
+      (t): t is { startDate: string; endDate: string } =>
+        t.startDate !== null && t.endDate !== null,
+    );
+    if (dated.length > 0) {
+      const taskStart = [...dated.map((t) => t.startDate)].sort()[0];
+      const taskEnd   = [...dated.map((t) => t.endDate)].sort().at(-1)!;
+      if (start > taskStart) start = taskStart;
+      if (end   < taskEnd)   end   = taskEnd;
+    }
   }
 
-  const totalDays = Math.max(diffInDays(start, end) + 1, minTotalDays);
+  // En mode manuel, respecter la plage telle quelle (sans appliquer minTotalDays du zoom).
+  // En mode auto, appliquer le minimum de zoom comme avant.
+  const isManual = timelineStart !== null || timelineEnd !== null;
+  const totalDays = isManual
+    ? Math.max(diffInDays(start, end) + 1, MIN_TIMELINE_DAYS)
+    : Math.max(diffInDays(start, end) + 1, minTotalDays);
   return { startDate: start, endDate: end, totalDays };
+}
+
+/** Valide une plage manuelle, retourne un message d'erreur ou null. */
+export function validateTimelineRange(start: string, end: string): string | null {
+  if (end < start) return 'La date de fin doit être après la date de début.';
+  const days = diffInDays(start, end) + 1;
+  if (days < MIN_TIMELINE_DAYS)
+    return `La plage minimale est de ${MIN_TIMELINE_DAYS} jours (1 semaine).`;
+  if (days > MAX_TIMELINE_DAYS)
+    return `La plage maximale est de ${MAX_TIMELINE_DAYS} jours (52 semaines).`;
+  return null;
 }
 
 /**
