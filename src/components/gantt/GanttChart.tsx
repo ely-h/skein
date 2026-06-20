@@ -142,16 +142,18 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
             style={{ width: labelW }}
           >
             <span className="truncate">{activeProject?.name ?? 'Gantt'}</span>
-
-            {/* Handle resize colonne label */}
             <div
               aria-hidden
               {...labelHandle}
               className={[
-                'absolute inset-y-0 right-0 w-1.5 cursor-col-resize z-10 transition-colors',
-                isResizing ? 'bg-emerald-500/50' : 'hover:bg-emerald-400/40',
+                'absolute inset-y-0 -right-1 w-2 cursor-col-resize z-10 group/resize',
               ].join(' ')}
-            />
+            >
+              <div className={[
+                'absolute inset-y-0 left-1/2 w-px -translate-x-px transition-colors',
+                isResizing ? 'bg-emerald-500' : 'bg-transparent group-hover/resize:bg-emerald-400',
+              ].join(' ')} />
+            </div>
           </div>
           <GanttHeader config={config} zoom={zoom} onDayWidthChange={onDayWidthChange} />
         </div>
@@ -181,6 +183,8 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
                     task={task}
                     config={config}
                     labelW={labelW}
+                    labelHandle={labelHandle}
+                    isResizing={isResizing}
                     onEdit={onEditTask}
                     isSelected={selectedIds.has(task.id)}
                     isInGroupDrag={isGroupDragging && selectedIds.has(task.id)}

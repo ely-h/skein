@@ -2,6 +2,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import type { Task, TaskStatus } from '../../types/index';
 import type { TimelineConfig } from '../../lib/timeline';
 import { ROW_H } from './constants';
+import type { LabelResizeHandle } from '../../hooks/useLabelResize';
 import TaskBar from './TaskBar';
 
 const STATUS_DOT: Record<TaskStatus, string> = {
@@ -18,6 +19,8 @@ interface Props {
   task:          Task;
   config:        TimelineConfig;
   labelW:        number;
+  labelHandle:   LabelResizeHandle;
+  isResizing:    boolean;
   onEdit:        (id: string) => void;
   isSelected:    boolean;
   isInGroupDrag: boolean;
@@ -50,7 +53,7 @@ function GripIcon() {
   );
 }
 
-export default function TaskRow({ task, config, labelW, onEdit, isSelected, isInGroupDrag, onSelect }: Props) {
+export default function TaskRow({ task, config, labelW, labelHandle, isResizing, onEdit, isSelected, isInGroupDrag, onSelect }: Props) {
   const isScheduled = task.startDate !== null && task.endDate !== null;
 
   const {
@@ -87,7 +90,7 @@ export default function TaskRow({ task, config, labelW, onEdit, isSelected, isIn
       {/* Étiquette — reste visible lors du scroll horizontal */}
       <div
         className={[
-          'sticky left-0 z-10 flex-none flex items-center gap-1.5 px-2 border-r border-[#E8E6E1] dark:border-neutral-700 transition-colors cursor-default',
+          'relative sticky left-0 z-10 flex-none flex items-center gap-1.5 px-2 border-r border-[#E8E6E1] dark:border-neutral-700 transition-colors cursor-default',
           isSelected
             ? 'bg-[#D0E5DF] dark:bg-emerald-950/30 group-hover:bg-[#C4DDD5] dark:group-hover:bg-emerald-950/40'
             : 'bg-[#F8F7F4] dark:bg-neutral-800 group-hover:bg-[#EDE9E3] dark:group-hover:bg-neutral-800',
@@ -95,6 +98,18 @@ export default function TaskRow({ task, config, labelW, onEdit, isSelected, isIn
         data-no-drag=""
         style={{ width: labelW }}
       >
+        {/* Handle resize invisible mais cliquable sur le bord droit */}
+        <div
+          aria-hidden
+          {...labelHandle}
+          className="absolute inset-y-0 -right-1 w-2 cursor-col-resize z-10 group/resize"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className={[
+            'absolute inset-y-0 left-1/2 w-px -translate-x-px transition-colors',
+            isResizing ? 'bg-emerald-500' : 'bg-transparent group-hover/resize:bg-emerald-400',
+          ].join(' ')} />
+        </div>
         {/* Poignée de réordonnage vertical */}
         <div
           ref={setActivatorNodeRef}
