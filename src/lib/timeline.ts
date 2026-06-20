@@ -71,16 +71,21 @@ export function resolveTimelineBounds(
   let start = timelineStart ?? auto.startDate;
   let end   = timelineEnd   ?? autoEnd;
 
-  // Clamp : la plage ne peut pas exclure une tâche existante
-  const dated = tasks.filter(
-    (t): t is { startDate: string; endDate: string } =>
-      t.startDate !== null && t.endDate !== null,
-  );
-  if (dated.length > 0) {
-    const taskStart = [...dated.map((t) => t.startDate)].sort()[0];
-    const taskEnd   = [...dated.map((t) => t.endDate)].sort().at(-1)!;
-    if (start > taskStart) start = taskStart;
-    if (end   < taskEnd)   end   = taskEnd;
+  // Clamp uniquement quand UNE SEULE borne est manuelle (l'autre est auto).
+  // Quand les deux bornes sont fixées manuellement, on respecte la plage telle quelle —
+  // les tâches hors plage ne s'affichent tout simplement pas dans le Gantt.
+  const bothManual = timelineStart !== null && timelineEnd !== null;
+  if (!bothManual) {
+    const dated = tasks.filter(
+      (t): t is { startDate: string; endDate: string } =>
+        t.startDate !== null && t.endDate !== null,
+    );
+    if (dated.length > 0) {
+      const taskStart = [...dated.map((t) => t.startDate)].sort()[0];
+      const taskEnd   = [...dated.map((t) => t.endDate)].sort().at(-1)!;
+      if (start > taskStart) start = taskStart;
+      if (end   < taskEnd)   end   = taskEnd;
+    }
   }
 
   // En mode manuel, respecter la plage telle quelle (sans appliquer minTotalDays du zoom).
