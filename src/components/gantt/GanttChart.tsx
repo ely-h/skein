@@ -176,6 +176,12 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
             >
               <GanttGrid config={config} zoom={zoom} rowCount={gridRows} labelW={labelW} />
 
+              {/* Fond opaque de la colonne label — couvre toute la hauteur de la grille */}
+              <div
+                className="absolute top-0 left-0 h-full pointer-events-none bg-[#F8F7F4] dark:bg-neutral-800 border-r border-[#E8E6E1] dark:border-neutral-700"
+                style={{ width: labelW }}
+              />
+
               {sortedTasks.length > 0 ? (
                 sortedTasks.map((task) => (
                   <TaskRow
