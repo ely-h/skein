@@ -3,12 +3,15 @@ import { useThemeStore } from '../../store/themeStore';
 import type { TaskStatus } from '../../types/index';
 
 const STATUS_LABELS: Record<TaskStatus, string> = {
+  backlog:     'Backlog',
   not_started: 'Pas commencé',
   in_progress: 'En cours',
+  in_review:   'En validation',
+  blocked:     'Bloqué',
   done:        'Terminé',
 };
 
-const STATUSES: TaskStatus[] = ['not_started', 'in_progress', 'done'];
+const STATUSES: TaskStatus[] = ['backlog', 'not_started', 'in_progress', 'in_review', 'blocked', 'done'];
 
 function PaletteIcon() {
   return (

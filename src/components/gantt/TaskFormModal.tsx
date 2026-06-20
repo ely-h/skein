@@ -110,8 +110,11 @@ export default function TaskFormModal({ taskId, initialStartDate, initialEndDate
             value={status}
             onChange={(e) => setStatus(e.target.value as TaskStatus)}
           >
+            <option value="backlog">Backlog</option>
             <option value="not_started">À faire</option>
             <option value="in_progress">En cours</option>
+            <option value="in_review">En validation</option>
+            <option value="blocked">Bloqué</option>
             <option value="done">Terminé</option>
           </select>
         </div>

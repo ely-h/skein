@@ -1,7 +1,12 @@
-export type TaskStatus = 'not_started' | 'in_progress' | 'done';
+export type TaskStatus =
+  | 'backlog'
+  | 'not_started'
+  | 'in_progress'
+  | 'in_review'
+  | 'blocked'
+  | 'done';
 export type ZoomLevel = 'day' | 'week' | 'month';
 export type ViewMode  = 'gantt' | 'list';
-// not_started -> gris clair | in_progress -> baby blue | done -> vert menthe
 
 export interface Task {
   id: string;
