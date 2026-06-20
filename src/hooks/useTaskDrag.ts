@@ -3,7 +3,7 @@ import { useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import type { DragStartEvent, DragMoveEvent } from '@dnd-kit/core';
 import type { RefObject } from 'react';
 import type { TimelineConfig } from '../lib/timeline';
-import { LABEL_W, ROW_H } from '../components/gantt/constants';
+import { ROW_H } from '../components/gantt/constants';
 import { useTaskStore } from '../store/taskStore';
 import { useProjectStore } from '../store/projectStore';
 import { useHistoryStore } from '../store/historyStore';
@@ -44,6 +44,7 @@ export function useTaskDrag(
   config: TimelineConfig,
   selectedIds: Set<string>,
   scrollRef: RefObject<HTMLDivElement | null>,
+  labelW: number,
 ) {
   const updateTask = useTaskStore((s) => s.updateTask);
   const stateRef   = useRef<DragState | null>(null);
@@ -173,7 +174,7 @@ export function useTaskDrag(
         const px             = pointerXRef.current;
         const pointerDirX    = px - lastPointerXRef.current; // positif = vers la droite
         const rightDist      = rect.right - px;
-        const leftDist       = px - (rect.left + LABEL_W);
+        const leftDist       = px - (rect.left + labelW);
 
         let speed = 0;
         if (pointerDirX > 0 && rightDist > 0 && rightDist < SCROLL_ZONE) {

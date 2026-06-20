@@ -9,7 +9,8 @@ import { resolveTimelineBounds, computeRequiredBoundsExpansion } from '../../lib
 import type { ZoomLevel } from '../../types/index';
 import { useDragCreate } from '../../hooks/useDragCreate';
 import { useTaskDrag } from '../../hooks/useTaskDrag';
-import { LABEL_W, HEADER_WEEK_H, HEADER_DAY_H, ROW_H, ZOOM_CONFIGS } from './constants';
+import { useLabelResize } from '../../hooks/useLabelResize';
+import { HEADER_WEEK_H, HEADER_DAY_H, ROW_H, ZOOM_CONFIGS } from './constants';
 import GanttHeader from './GanttHeader';
 import GanttGrid from './GanttGrid';
 import TaskRow from './TaskRow';
@@ -37,6 +38,8 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
   const projects         = useProjectStore((s) => s.projects);
   const activeProjectId  = useProjectStore((s) => s.activeProjectId);
   const setTimelineRange = useProjectStore((s) => s.setTimelineRange);
+
+  const { labelW, isResizing, handle: labelHandle } = useLabelResize();
 
   const handleSelect = useCallback((id: string, additive: boolean): void => {
     if (additive) {
@@ -76,11 +79,11 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
     return { startDate, totalDays, dayWidth };
   }, [zoom, dayWidth, tasks, activeProject]);
 
-  const totalW = LABEL_W + config.totalDays * config.dayWidth;
+  const totalW = labelW + config.totalDays * config.dayWidth;
 
   // Drag-create : tirer sur la grille vide pour créer une barre.
   const { preview, onMouseDown, result, clearResult } =
-    useDragCreate(config, scrollRef, LABEL_W);
+    useDragCreate(config, scrollRef, labelW);
 
   useEffect(() => {
     if (!result) return;
@@ -98,7 +101,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
     isVerticalDragging,
     verticalTargetIndex,
     popVerticalReorder,
-  } = useTaskDrag(config, selectedIds, scrollRef);
+  } = useTaskDrag(config, selectedIds, scrollRef, labelW);
 
   // Gère la fin d'un drag : tri vertical barre OU tri grip poignée OU nettoyage.
   const handleDragEnd = useCallback((event: DragEndEvent): void => {
@@ -135,10 +138,20 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
           style={{ height: HEADER_H }}
         >
           <div
-            className="sticky left-0 z-30 flex-none flex items-center px-4 bg-[#F8F7F4] dark:bg-neutral-800 border-r border-[#E8E6E1] dark:border-neutral-700 text-sm font-semibold text-neutral-900 dark:text-neutral-100"
-            style={{ width: LABEL_W }}
+            className="sticky left-0 z-30 flex-none flex items-center px-4 bg-[#F8F7F4] dark:bg-neutral-800 border-r border-[#E8E6E1] dark:border-neutral-700 text-sm font-semibold text-neutral-900 dark:text-neutral-100 relative"
+            style={{ width: labelW }}
           >
             <span className="truncate">{activeProject?.name ?? 'Gantt'}</span>
+
+            {/* Handle resize colonne label */}
+            <div
+              aria-hidden
+              {...labelHandle}
+              className={[
+                'absolute inset-y-0 right-0 w-1.5 cursor-col-resize z-10 transition-colors',
+                isResizing ? 'bg-emerald-500/50' : 'hover:bg-emerald-400/40',
+              ].join(' ')}
+            />
           </div>
           <GanttHeader config={config} zoom={zoom} onDayWidthChange={onDayWidthChange} />
         </div>
@@ -159,7 +172,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
               onMouseDown={onMouseDown}
               onClick={() => onSelectChange(new Set())}
             >
-              <GanttGrid config={config} zoom={zoom} rowCount={gridRows} />
+              <GanttGrid config={config} zoom={zoom} rowCount={gridRows} labelW={labelW} />
 
               {sortedTasks.length > 0 ? (
                 sortedTasks.map((task) => (
@@ -167,6 +180,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
                     key={task.id}
                     task={task}
                     config={config}
+                    labelW={labelW}
                     onEdit={onEditTask}
                     isSelected={selectedIds.has(task.id)}
                     isInGroupDrag={isGroupDragging && selectedIds.has(task.id)}
@@ -183,7 +197,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
               {preview && (
                 <div
                   className="absolute top-0 z-[8] pointer-events-none rounded-sm bg-emerald-400/25 border-x border-emerald-500/50"
-                  style={{ left: LABEL_W + preview.x, width: preview.width, height: '100%' }}
+                  style={{ left: labelW + preview.x, width: preview.width, height: '100%' }}
                 />
               )}
 
@@ -198,8 +212,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
           </SortableContext>
         </DndContext>
 
-
-</div>
+      </div>
     </div>
   );
 });

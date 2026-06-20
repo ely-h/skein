@@ -1,18 +1,23 @@
 import { useSortable } from '@dnd-kit/sortable';
 import type { Task, TaskStatus } from '../../types/index';
 import type { TimelineConfig } from '../../lib/timeline';
-import { LABEL_W, ROW_H } from './constants';
+import { ROW_H } from './constants';
 import TaskBar from './TaskBar';
 
 const STATUS_DOT: Record<TaskStatus, string> = {
+  backlog:     'bg-neutral-500 dark:bg-neutral-400',
   not_started: 'bg-neutral-300 dark:bg-neutral-500',
   in_progress: 'bg-sky-400 dark:bg-sky-500',
+  in_review:   'bg-amber-400 dark:bg-amber-500',
+  blocked:     'bg-red-400 dark:bg-red-500',
   done:        'bg-emerald-400 dark:bg-emerald-500',
+  custom:      'bg-violet-400 dark:bg-violet-500',
 };
 
 interface Props {
   task:          Task;
   config:        TimelineConfig;
+  labelW:        number;
   onEdit:        (id: string) => void;
   isSelected:    boolean;
   isInGroupDrag: boolean;
@@ -45,7 +50,7 @@ function GripIcon() {
   );
 }
 
-export default function TaskRow({ task, config, onEdit, isSelected, isInGroupDrag, onSelect }: Props) {
+export default function TaskRow({ task, config, labelW, onEdit, isSelected, isInGroupDrag, onSelect }: Props) {
   const isScheduled = task.startDate !== null && task.endDate !== null;
 
   const {
@@ -69,7 +74,7 @@ export default function TaskRow({ task, config, onEdit, isSelected, isInGroupDra
         isDragging ? 'opacity-60 shadow-md' : '',
       ].join(' ')}
       style={{
-        height: ROW_H,
+        minHeight: ROW_H,
         transform: transform ? `translate3d(0, ${Math.round(transform.y)}px, 0)` : undefined,
         transition,
         zIndex: isDragging ? 50 : undefined,
@@ -88,7 +93,7 @@ export default function TaskRow({ task, config, onEdit, isSelected, isInGroupDra
             : 'bg-[#F8F7F4] dark:bg-neutral-800 group-hover:bg-[#EDE9E3] dark:group-hover:bg-neutral-800',
         ].join(' ')}
         data-no-drag=""
-        style={{ width: LABEL_W }}
+        style={{ width: labelW }}
       >
         {/* Poignée de réordonnage vertical */}
         <div
@@ -104,7 +109,7 @@ export default function TaskRow({ task, config, onEdit, isSelected, isInGroupDra
 
         <div className={`flex-none w-1.5 h-1.5 rounded-full transition-colors duration-300 ease-out ${STATUS_DOT[task.status]}`} />
 
-        <span className="truncate text-sm text-neutral-700 dark:text-neutral-300 flex-1 min-w-0">
+        <span className="break-words text-sm text-neutral-700 dark:text-neutral-300 flex-1 min-w-0">
           {task.name}
         </span>
 

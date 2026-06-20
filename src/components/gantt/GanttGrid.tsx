@@ -1,15 +1,16 @@
 import { addDays, parseDate } from '../../lib/dates';
 import type { TimelineConfig } from '../../lib/timeline';
 import type { ZoomLevel } from '../../types/index';
-import { LABEL_W, ROW_H } from './constants';
+import { ROW_H } from './constants';
 
 interface Props {
   config:   TimelineConfig;
   zoom:     ZoomLevel;
   rowCount: number;
+  labelW:   number;
 }
 
-export default function GanttGrid({ config, zoom, rowCount }: Props) {
+export default function GanttGrid({ config, zoom, rowCount, labelW }: Props) {
   const totalH = rowCount * ROW_H;
 
   // ── Vue Jour : une colonne = 1 jour, week-ends grisés ───────────────────────
@@ -17,7 +18,7 @@ export default function GanttGrid({ config, zoom, rowCount }: Props) {
     return (
       <div
         className="absolute top-0 pointer-events-none"
-        style={{ left: LABEL_W, width: config.totalDays * config.dayWidth, height: totalH }}
+        style={{ left: labelW, width: config.totalDays * config.dayWidth, height: totalH }}
       >
         {Array.from({ length: config.totalDays }, (_, i) => {
           const date      = parseDate(addDays(config.startDate, i));
@@ -49,7 +50,7 @@ export default function GanttGrid({ config, zoom, rowCount }: Props) {
     return (
       <div
         className="absolute top-0 pointer-events-none"
-        style={{ left: LABEL_W, width: config.totalDays * config.dayWidth, height: totalH }}
+        style={{ left: labelW, width: config.totalDays * config.dayWidth, height: totalH }}
       >
         {cols.map((col, idx) => (
           <div
@@ -87,7 +88,7 @@ export default function GanttGrid({ config, zoom, rowCount }: Props) {
   return (
     <div
       className="absolute top-0 pointer-events-none"
-      style={{ left: LABEL_W, width: config.totalDays * config.dayWidth, height: totalH }}
+      style={{ left: labelW, width: config.totalDays * config.dayWidth, height: totalH }}
     >
       {cols.map((col, idx) => (
         <div

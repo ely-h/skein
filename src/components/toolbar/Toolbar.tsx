@@ -66,8 +66,6 @@ interface Props {
   timelineEnd:           string | null;
   effectiveStart:        string;        // valeur résolue à afficher
   effectiveEnd:          string;
-  taskEarliestDate:      string | null; // borne max pour l'input début
-  taskLatestDate:        string | null; // borne min pour l'input fin
   onTimelineRangeChange: (start: string | null, end: string | null) => void;
 }
 
@@ -82,7 +80,6 @@ export default function Toolbar({
   dayWidth, dayWidthMin, dayWidthMax, onDayWidthChange,
   timelineStart, timelineEnd,
   effectiveStart, effectiveEnd,
-  taskEarliestDate, taskLatestDate,
   onTimelineRangeChange,
 }: Props) {
   const exportDisabled = !hasProject || isExporting;

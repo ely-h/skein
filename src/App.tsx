@@ -57,24 +57,12 @@ export default function App() {
   // Plage temporelle résolue pour la toolbar
   const timelineStart = activeProject?.timelineStart ?? null;
   const timelineEnd   = activeProject?.timelineEnd   ?? null;
-  const { effectiveStart, effectiveEnd, taskEarliestDate, taskLatestDate } = useMemo(() => {
+  const { effectiveStart, effectiveEnd } = useMemo(() => {
     const minDays = ZOOM_CONFIGS[zoom].totalDays;
     const resolved = resolveTimelineBounds(tasks, timelineStart, timelineEnd, minDays);
-    const dated = tasks.filter(
-      (t): t is typeof t & { startDate: string; endDate: string } =>
-        t.startDate !== null && t.endDate !== null,
-    );
-    const taskEarliestDate = dated.length > 0
-      ? [...dated.map((t) => t.startDate)].sort()[0]
-      : null;
-    const taskLatestDate = dated.length > 0
-      ? [...dated.map((t) => t.endDate)].sort().at(-1)!
-      : null;
     return {
-      effectiveStart:  resolved.startDate,
-      effectiveEnd:    resolved.endDate,
-      taskEarliestDate,
-      taskLatestDate,
+      effectiveStart: resolved.startDate,
+      effectiveEnd:   resolved.endDate,
     };
   }, [tasks, timelineStart, timelineEnd, zoom]);
 
@@ -260,8 +248,6 @@ export default function App() {
             timelineEnd={timelineEnd}
             effectiveStart={effectiveStart}
             effectiveEnd={effectiveEnd}
-            taskEarliestDate={taskEarliestDate}
-            taskLatestDate={taskLatestDate}
             onTimelineRangeChange={handleTimelineRangeChange}
           />
           {importError && (
