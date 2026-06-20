@@ -68,11 +68,11 @@ export default function ReadOnlyGanttView({ project }: Props) {
 
         {/* Header */}
         <div
-          className="sticky top-0 z-20 flex bg-[#F8F7F4] dark:bg-neutral-800 border-b-2 border-[#E8E6E1] dark:border-neutral-700"
+          className="sticky top-0 z-20 flex bg-[var(--bg-base)] dark:bg-[var(--bg-base)] border-b-2 border-[var(--border)] dark:border-[var(--border)]"
           style={{ height: HEADER_H }}
         >
           <div
-            className="sticky left-0 z-30 flex-none flex items-center px-4 bg-[#F8F7F4] dark:bg-neutral-800 border-r border-[#E8E6E1] dark:border-neutral-700 text-sm font-semibold text-neutral-900 dark:text-neutral-100"
+            className="sticky left-0 z-30 flex-none flex items-center px-4 bg-[var(--bg-base)] dark:bg-[var(--bg-base)] border-r border-[var(--border)] dark:border-[var(--border)] text-sm font-semibold text-neutral-900 dark:text-neutral-100"
             style={{ width: LABEL_W }}
           >
             <span className="truncate">{project.name}</span>
@@ -87,11 +87,11 @@ export default function ReadOnlyGanttView({ project }: Props) {
           {sortedTasks.length > 0 ? sortedTasks.map((task) => (
             <div
               key={task.id}
-              className="flex border-b border-[#EDEBE5] dark:border-neutral-700/60"
+              className="flex border-b border-[#EDEBE5] dark:border-[var(--border)]/60"
               style={{ height: ROW_H }}
             >
               <div
-                className="sticky left-0 z-10 flex-none flex items-center gap-2 px-4 bg-[#F8F7F4] dark:bg-neutral-800 border-r border-[#E8E6E1] dark:border-neutral-700"
+                className="sticky left-0 z-10 flex-none flex items-center gap-2 px-4 bg-[var(--bg-base)] dark:bg-[var(--bg-base)] border-r border-[var(--border)] dark:border-[var(--border)]"
                 style={{ width: LABEL_W }}
               >
                 <div

@@ -9,7 +9,7 @@ export default function EmptyState() {
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-6 bg-[#F8F7F4] dark:bg-neutral-800">
+    <div className="flex-1 flex flex-col items-center justify-center gap-6 bg-[var(--bg-base)] dark:bg-[var(--bg-base)]">
       <img src="/logo.png" alt="Skein" className="w-16 h-16 opacity-80" />
       <div className="text-center">
         <p className="text-base font-semibold text-neutral-700 dark:text-neutral-200">

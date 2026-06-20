@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { ZoomLevel, ViewMode } from '../../types/index';
 import ColorPalettePanel from './ColorPalettePanel';
+import type { AppTheme } from '../../store/themeStore';
 
 const ZOOM_LABELS: Record<ZoomLevel, string> = {
   day:   'Jour',
@@ -56,6 +57,8 @@ interface Props {
   onImportClick: () => void;
   onShare:       () => void;
   shareLabel:    string;
+  appTheme:      AppTheme;
+  onThemeChange: (t: AppTheme) => void;
   // Largeur de colonne (vue Gantt uniquement)
   dayWidth:              number;
   dayWidthMin:           number;
@@ -77,6 +80,7 @@ export default function Toolbar({
   isExporting, hasProject,
   onImportClick,
   onShare, shareLabel,
+  appTheme, onThemeChange,
   dayWidth, dayWidthMin, dayWidthMax, onDayWidthChange,
   timelineStart, timelineEnd,
   effectiveStart, effectiveEnd,
@@ -113,11 +117,11 @@ export default function Toolbar({
   }, [zoomOpen]);
 
   const btnBase  = 'px-3 py-1 text-xs font-medium rounded-xl transition-colors';
-  const btnGhost = `${btnBase} text-neutral-600 dark:text-neutral-400 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700`;
-  const btnIcon  = 'p-1.5 rounded-xl transition-colors text-neutral-500 dark:text-neutral-400 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-100';
+  const btnGhost = `${btnBase} text-neutral-600 dark:text-neutral-400 hover:bg-[var(--bg-hover)] dark:hover:bg-neutral-700`;
+  const btnIcon  = 'p-1.5 rounded-xl transition-colors text-neutral-500 dark:text-neutral-400 hover:bg-[var(--bg-hover)] dark:hover:bg-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-100';
 
   return (
-    <div className="flex-none flex items-center gap-2 px-4 h-10 border-b border-[#E8E6E1] dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800">
+    <div className="flex-none flex items-center gap-2 px-4 h-10 border-b border-[var(--border)] dark:border-[var(--border)] bg-[var(--bg-base)] dark:bg-[var(--bg-base)]">
 
       {/* Sélecteur de vue : Gantt / Liste */}
       <div className="flex items-center gap-1">
@@ -130,7 +134,7 @@ export default function Toolbar({
               btnBase,
               view === v
                 ? 'bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900'
-                : 'text-neutral-600 dark:text-neutral-400 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700',
+                : 'text-neutral-600 dark:text-neutral-400 hover:bg-[var(--bg-hover)] dark:hover:bg-neutral-700',
             ].join(' ')}
           >
             {VIEW_LABELS[v]}
@@ -155,7 +159,7 @@ export default function Toolbar({
             </button>
 
             <div className={[
-              'absolute left-0 top-full mt-1 z-50 min-w-[100px] rounded-xl border border-[#E8E6E1] dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800 shadow-lg py-1 overflow-hidden',
+              'absolute left-0 top-full mt-1 z-50 min-w-[100px] rounded-xl border border-[var(--border)] dark:border-[var(--border)] bg-[var(--bg-base)] dark:bg-[var(--bg-base)] shadow-lg py-1 overflow-hidden',
               'transition-all duration-150 ease-out origin-top-left',
               zoomOpen
                 ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
@@ -170,7 +174,7 @@ export default function Toolbar({
                     'w-full text-left px-3 py-1.5 text-xs transition-colors',
                     zoom === z
                       ? 'text-emerald-600 dark:text-emerald-400 font-medium'
-                      : 'text-neutral-700 dark:text-neutral-300 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700',
+                      : 'text-neutral-700 dark:text-neutral-300 hover:bg-[var(--bg-hover)] dark:hover:bg-neutral-700',
                   ].join(' ')}
                 >
                   {ZOOM_LABELS[z]}
@@ -209,7 +213,7 @@ export default function Toolbar({
             onChange={(e) =>
               onTimelineRangeChange(e.target.value || null, timelineEnd)
             }
-            className="text-xs px-2 py-1 rounded-xl border border-[#E8E6E1] dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+            className="text-xs px-2 py-1 rounded-xl border border-[var(--border)] dark:border-[var(--border)] bg-[var(--bg-base)] dark:bg-[var(--bg-base)] text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
           />
           <span className="text-xs text-neutral-400 dark:text-neutral-500 select-none">→</span>
           <input
@@ -218,14 +222,14 @@ export default function Toolbar({
             onChange={(e) =>
               onTimelineRangeChange(timelineStart, e.target.value || null)
             }
-            className="text-xs px-2 py-1 rounded-xl border border-[#E8E6E1] dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+            className="text-xs px-2 py-1 rounded-xl border border-[var(--border)] dark:border-[var(--border)] bg-[var(--bg-base)] dark:bg-[var(--bg-base)] text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
           />
           {(timelineStart !== null || timelineEnd !== null) && (
             <button
               type="button"
               title="Réinitialiser la plage automatiquement"
               onClick={() => onTimelineRangeChange(null, null)}
-              className="text-xs px-1.5 py-1 rounded-xl text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700 transition-colors"
+              className="text-xs px-1.5 py-1 rounded-xl text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-[var(--bg-hover)] dark:hover:bg-neutral-700 transition-colors"
             >
               ↺
             </button>
@@ -247,7 +251,7 @@ export default function Toolbar({
         </button>
 
         {/* Palette de couleurs */}
-        <ColorPalettePanel />
+        <ColorPalettePanel appTheme={appTheme} onThemeChange={onThemeChange} />
 
         {DIVIDER}
 
@@ -286,7 +290,7 @@ export default function Toolbar({
 
           <div
             className={[
-              'absolute right-0 top-full mt-1 z-50 min-w-[110px] rounded-xl border border-[#E8E6E1] dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-800 shadow-lg py-1 overflow-hidden',
+              'absolute right-0 top-full mt-1 z-50 min-w-[110px] rounded-xl border border-[var(--border)] dark:border-[var(--border)] bg-[var(--bg-base)] dark:bg-[var(--bg-base)] shadow-lg py-1 overflow-hidden',
               'transition-all duration-150 ease-out origin-top-right',
               exportOpen
                 ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
@@ -298,14 +302,14 @@ export default function Toolbar({
                 <button
                   type="button"
                   onClick={() => { onExportPng(); setExportOpen(false); }}
-                  className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700 transition-colors"
+                  className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-[var(--bg-hover)] dark:hover:bg-neutral-700 transition-colors"
                 >
                   PNG
                 </button>
                 <button
                   type="button"
                   onClick={() => { onExportPdf(); setExportOpen(false); }}
-                  className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700 transition-colors"
+                  className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-[var(--bg-hover)] dark:hover:bg-neutral-700 transition-colors"
                 >
                   PDF
                 </button>
@@ -314,7 +318,7 @@ export default function Toolbar({
             <button
               type="button"
               onClick={() => { onExportJson(); setExportOpen(false); }}
-              className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700 transition-colors"
+              className="w-full text-left px-3 py-1.5 text-xs text-neutral-700 dark:text-neutral-300 hover:bg-[var(--bg-hover)] dark:hover:bg-neutral-700 transition-colors"
             >
               JSON
             </button>

@@ -63,10 +63,10 @@ export default function TaskLabelRow({ task, onEdit, isSelected, onSelect }: Pro
     <div
       ref={setNodeRef}
       className={[
-        'group flex items-center gap-1.5 px-2 border-b border-[#EDEBE5] dark:border-neutral-700/60 transition-colors cursor-default select-none',
+        'group flex items-center gap-1.5 px-2 border-b border-[#EDEBE5] dark:border-[var(--border)]/60 transition-colors cursor-default select-none',
         isSelected
           ? 'bg-[#D0E5DF] dark:bg-emerald-950/30'
-          : 'bg-[#F8F7F4] dark:bg-neutral-800 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700/50',
+          : 'bg-[var(--bg-base)] dark:bg-[var(--bg-base)] hover:bg-[var(--bg-hover)] dark:hover:bg-neutral-700/50',
         isDragging ? 'opacity-60 shadow-md' : '',
       ].join(' ')}
       style={{
@@ -107,7 +107,7 @@ export default function TaskLabelRow({ task, onEdit, isSelected, onSelect }: Pro
       {/* Éditer */}
       <button
         type="button"
-        className="flex-none p-1 rounded-xl opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700 transition-all duration-150"
+        className="flex-none p-1 rounded-xl opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-[var(--bg-hover)] dark:hover:bg-neutral-700 transition-all duration-150"
         onClick={(e) => { e.stopPropagation(); onEdit(task.id); }}
         title="Modifier"
       >

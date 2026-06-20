@@ -21,7 +21,7 @@ export default function Modal({ onClose, children }: Props) {
       onClick={onClose}
     >
       <div
-        className="modal-panel bg-[#F8F7F4] dark:bg-neutral-800 rounded-lg shadow-2xl w-full max-w-md mx-4 p-6"
+        className="modal-panel bg-[var(--bg-base)] dark:bg-[var(--bg-base)] rounded-lg shadow-2xl w-full max-w-md mx-4 p-6"
         onClick={(e) => e.stopPropagation()}
       >
         {children}

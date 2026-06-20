@@ -3,6 +3,35 @@
 /* Bascule dark mode sur la classe .dark plutôt que via media query */
 @variant dark (&:where(.dark, .dark *));
 
+/* ── Variables de thème ── */
+:root {
+  --bg-base:   #F8F7F4;
+  --bg-subtle: #F0EDE8;
+  --bg-hover:  #EDE9E3;
+  --border:    #E8E6E1;
+}
+
+.theme-white {
+  --bg-base:   #FFFFFF;
+  --bg-subtle: #F5F5F5;
+  --bg-hover:  #EBEBEB;
+  --border:    #E2E2E2;
+}
+
+.dark {
+  --bg-base:   #262626;
+  --bg-subtle: rgba(10, 10, 10, 0.5);
+  --bg-hover:  #404040;
+  --border:    #404040;
+}
+
+.dark.theme-black {
+  --bg-base:   #0A0A0A;
+  --bg-subtle: rgba(255,255,255,0.03);
+  --bg-hover:  #1A1A1A;
+  --border:    #222222;
+}
+
 @keyframes modal-in {
   from { opacity: 0; transform: scale(0.96) translateY(4px); }
   to   { opacity: 1; transform: scale(1)    translateY(0);   }

@@ -6,7 +6,7 @@ import { useThemeStore } from '../../store/themeStore';
 import Modal from '../ui/Modal';
 
 const INPUT_CLS =
-  'w-full rounded-md border border-[#E8E6E1] dark:border-neutral-700 bg-[#F8F7F4] dark:bg-neutral-900 px-3 py-1.5 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50';
+  'w-full rounded-md border border-[var(--border)] dark:border-[var(--border)] bg-[var(--bg-base)] dark:bg-neutral-900 px-3 py-1.5 text-sm text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/50';
 
 const LABEL_CLS = 'block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1';
 
@@ -182,7 +182,7 @@ export default function TaskFormModal({ taskId, initialStartDate, initialEndDate
             <div>
               <label className={LABEL_CLS}>Couleur</label>
               <div
-                className="w-9 h-9 rounded-md border-2 border-[#E8E6E1] dark:border-neutral-700 overflow-hidden relative"
+                className="w-9 h-9 rounded-md border-2 border-[var(--border)] dark:border-[var(--border)] overflow-hidden relative"
                 style={{ backgroundColor: customColor }}
               >
                 <input
@@ -234,7 +234,7 @@ export default function TaskFormModal({ taskId, initialStartDate, initialEndDate
 
           <button
             type="button"
-            className="ml-auto px-4 py-2 text-sm rounded-xl bg-[#EDE9E3] dark:bg-neutral-800 hover:bg-[#E8E6E1] dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors"
+            className="ml-auto px-4 py-2 text-sm rounded-xl bg-[var(--bg-hover)] dark:bg-[var(--bg-base)] hover:bg-[#E8E6E1] dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors"
             onClick={onClose}
           >
             Annuler

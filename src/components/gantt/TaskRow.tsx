@@ -16,7 +16,7 @@ export default function TaskRow({ task, config, isSelected, isInGroupDrag, onSel
 
   return (
     <div
-      className="flex border-b border-[#EDEBE5] dark:border-neutral-700/60"
+      className="flex border-b border-[#EDEBE5] dark:border-[var(--border)]/60"
       style={{ height: ROW_H }}
     >
       <div

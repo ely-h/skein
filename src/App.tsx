@@ -15,6 +15,7 @@ import { exportToPng, exportToPdf, exportToJson } from './lib/export';
 import { parseProjectJson } from './lib/import';
 import { buildShareUrl } from './lib/share';
 import { useDarkMode } from './hooks/useDarkMode';
+import { useThemeStore } from './store/themeStore';
 import EmptyState from './components/ui/EmptyState';
 import type { ZoomLevel, ViewMode } from './types/index';
 
@@ -32,6 +33,20 @@ export default function App() {
   const deleteTask        = useTaskStore((s) => s.deleteTask);
 
   const { dark, toggle: toggleDark } = useDarkMode();
+  const appTheme    = useThemeStore((s) => s.appTheme);
+  const setAppTheme = useThemeStore((s) => s.setAppTheme);
+
+  // Applique le thème sur <html> : classe dark + classe theme-X
+  useEffect(() => {
+    const html = document.documentElement;
+    const isDark = appTheme === 'dark' || appTheme === 'black';
+    html.classList.toggle('dark',        isDark);
+    html.classList.toggle('theme-white', appTheme === 'white');
+    html.classList.toggle('theme-black', appTheme === 'black');
+    // Sync le toggle dark/light interne
+    if (isDark !== dark) toggleDark();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appTheme]);
   const { widths, setWidth } = useColumnWidth();
 
   const ganttRef     = useRef<HTMLDivElement>(null);
@@ -207,8 +222,8 @@ export default function App() {
     : null;
 
   return (
-    <div className="h-screen flex flex-col bg-[#F8F7F4] dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100">
-      <header className="flex-none flex items-center px-6 h-12 border-b border-[#E8E6E1] dark:border-neutral-700 shrink-0">
+    <div className="h-screen flex flex-col bg-[var(--bg-base)] dark:bg-[var(--bg-base)] text-neutral-900 dark:text-neutral-100">
+      <header className="flex-none flex items-center px-6 h-12 border-b border-[var(--border)] dark:border-[var(--border)] shrink-0">
         <h1 className="text-base font-semibold tracking-tight">Skein</h1>
         {hasProjects && (
           <button
@@ -240,6 +255,8 @@ export default function App() {
             onImportClick={handleImportClick}
             onShare={handleShare}
             shareLabel={shareLabel}
+            appTheme={appTheme}
+            onThemeChange={setAppTheme}
             dayWidth={dayWidth}
             dayWidthMin={dayWidthMin}
             dayWidthMax={dayWidthMax}

@@ -145,12 +145,12 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
 
         {/* ── Panel gauche : colonne des tâches ── */}
         <div
-          className="relative flex-none flex flex-col bg-[#F8F7F4] dark:bg-neutral-800 border-r border-[#E8E6E1] dark:border-neutral-700"
+          className="relative flex-none flex flex-col bg-[var(--bg-base)] dark:bg-[var(--bg-base)] border-r border-[var(--border)] dark:border-[var(--border)]"
           style={{ width: labelW }}
         >
           {/* En-tête colonne */}
           <div
-            className="flex-none flex items-center px-4 bg-[#F8F7F4] dark:bg-neutral-800 border-b-2 border-[#E8E6E1] dark:border-neutral-700 text-sm font-semibold text-neutral-900 dark:text-neutral-100 z-10"
+            className="flex-none flex items-center px-4 bg-[var(--bg-base)] dark:bg-[var(--bg-base)] border-b-2 border-[var(--border)] dark:border-[var(--border)] text-sm font-semibold text-neutral-900 dark:text-neutral-100 z-10"
             style={{ height: HEADER_H }}
           >
             <span className="truncate">{activeProject?.name ?? 'Gantt'}</span>
@@ -198,7 +198,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
           <div style={{ width: totalW }}>
             {/* Header timeline */}
             <div
-              className="sticky top-0 z-20 bg-[#F8F7F4] dark:bg-neutral-800 border-b-2 border-[#E8E6E1] dark:border-neutral-700"
+              className="sticky top-0 z-20 bg-[var(--bg-base)] dark:bg-[var(--bg-base)] border-b-2 border-[var(--border)] dark:border-[var(--border)]"
               style={{ height: HEADER_H }}
             >
               <GanttHeader config={config} zoom={zoom} onDayWidthChange={onDayWidthChange} />
