@@ -1,7 +1,7 @@
 import type { Project, Task, TaskStatus } from '../types/index';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const VALID_STATUSES: readonly TaskStatus[] = ['not_started', 'in_progress', 'done'];
+const VALID_STATUSES: readonly TaskStatus[] = ['backlog', 'not_started', 'in_progress', 'in_review', 'blocked', 'done'];
 
 function isStr(v: unknown): v is string {
   return typeof v === 'string';
@@ -36,7 +36,7 @@ function validateTask(raw: unknown, index: number): Task {
   if (!isNullableDate(t.endDate))
     throw new Error(`Tâche ${index} : "endDate" doit être YYYY-MM-DD ou null`);
   if (!isStatus(t.status))
-    throw new Error(`Tâche ${index} : "status" invalide (not_started | in_progress | done)`);
+    throw new Error(`Tâche ${index} : "status" invalide (backlog | not_started | in_progress | in_review | blocked | done)`);
   if (t.parentId !== null && !isStr(t.parentId))
     throw new Error(`Tâche ${index} : "parentId" doit être une chaîne ou null`);
   if (typeof t.order !== 'number' || !isFinite(t.order))

@@ -8,8 +8,11 @@ import { useThemeStore } from '../../store/themeStore';
 import { contrastColor } from '../../lib/color';
 
 const NEXT_STATUS: Record<TaskStatus, TaskStatus> = {
+  backlog:     'not_started',
   not_started: 'in_progress',
-  in_progress: 'done',
+  in_progress: 'in_review',
+  in_review:   'done',
+  blocked:     'in_progress',
   done:        'not_started',
 };
 
@@ -29,6 +32,18 @@ function StatusIcon({ status }: { status: TaskStatus }) {
       </div>
     );
   }
+  if (status === 'blocked') {
+    return (
+      <div
+        className="w-4 h-4 rounded-full flex items-center justify-center flex-none"
+        style={{ backgroundColor: color }}
+      >
+        <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+          <path d="M4 1.5v3M4 6h.01" stroke={contrastColor(color)} strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      </div>
+    );
+  }
   if (status === 'in_progress') {
     return (
       <div
@@ -37,6 +52,15 @@ function StatusIcon({ status }: { status: TaskStatus }) {
       />
     );
   }
+  if (status === 'in_review') {
+    return (
+      <div
+        className="w-4 h-4 rounded-full border-2 flex-none"
+        style={{ borderColor: color, backgroundColor: `${color}30` }}
+      />
+    );
+  }
+  // backlog + not_started : cercle vide
   return (
     <div
       className="w-4 h-4 rounded-full border-2 flex-none"
