@@ -1,17 +1,8 @@
 import { useSortable } from '@dnd-kit/sortable';
-import type { Task, TaskStatus } from '../../types/index';
+import type { Task } from '../../types/index';
 import { ROW_H } from './constants';
 import { useThemeStore } from '../../store/themeStore';
 
-const STATUS_DOT: Record<TaskStatus, string> = {
-  backlog:     'bg-neutral-500 dark:bg-neutral-400',
-  not_started: 'bg-neutral-300 dark:bg-neutral-500',
-  in_progress: 'bg-sky-400 dark:bg-sky-500',
-  in_review:   'bg-amber-400 dark:bg-amber-500',
-  blocked:     'bg-red-400 dark:bg-red-500',
-  done:        'bg-emerald-400 dark:bg-emerald-500',
-  custom:      '',
-};
 
 function PencilIcon() {
   return (
@@ -55,6 +46,7 @@ interface Props {
 }
 
 export default function TaskLabelRow({ task, onEdit, onDelete, isSelected, onSelect }: Props) {
+  const statusColors   = useThemeStore((s) => s.statusColors);
   const customStatuses = useThemeStore((s) => s.customStatuses);
 
   const {
@@ -69,7 +61,7 @@ export default function TaskLabelRow({ task, onEdit, onDelete, isSelected, onSel
 
   const dotColor = task.status === 'custom'
     ? (task.customStatus?.color ?? customStatuses.find(cs => cs.label === task.customStatus?.label)?.color ?? '#a78bfa')
-    : undefined;
+    : statusColors[task.status];
 
   return (
     <div
@@ -105,11 +97,10 @@ export default function TaskLabelRow({ task, onEdit, onDelete, isSelected, onSel
       </div>
 
       {/* Dot statut */}
-      {task.status === 'custom' ? (
-        <div className="flex-none w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dotColor }} />
-      ) : (
-        <div className={`flex-none w-1.5 h-1.5 rounded-full transition-colors duration-300 ease-out ${STATUS_DOT[task.status]}`} />
-      )}
+      <div
+        className="flex-none w-1.5 h-1.5 rounded-full transition-colors duration-300 ease-out"
+        style={{ backgroundColor: dotColor }}
+      />
 
       {/* Nom */}
       <span className="truncate text-sm text-neutral-700 dark:text-neutral-300 flex-1 min-w-0">
