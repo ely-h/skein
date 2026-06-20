@@ -49,9 +49,21 @@ export default function ProjectSidebar() {
 
       {/* En-tête sidebar */}
       <div className="flex-none flex items-center px-4 h-10 border-b border-[#E8E6E1] dark:border-neutral-700">
-        <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+        <span className="flex-1 text-xs font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
           Projets
         </span>
+        {addingNew ? null : (
+          <button
+            type="button"
+            onClick={() => setAddingNew(true)}
+            title="Nouveau projet"
+            className="p-1 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700/50 transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Liste des projets */}
@@ -142,36 +154,25 @@ export default function ProjectSidebar() {
             </li>
           );
         })}
-      </ul>
 
-      {/* Bouton / formulaire nouveau projet */}
-      <div className="flex-none border-t border-[#E8E6E1] dark:border-neutral-700 p-2">
-        {addingNew ? (
-          <input
-            ref={newRef}
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            onBlur={() => { if (!newName.trim()) { setAddingNew(false); setNewName(''); } }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') commitNew();
-              if (e.key === 'Escape') { setAddingNew(false); setNewName(''); }
-            }}
-            placeholder="Nom du projet"
-            className="w-full px-2 py-1.5 text-sm rounded-md bg-[#F8F7F4] dark:bg-neutral-800 border border-emerald-500 outline-none text-neutral-900 dark:text-neutral-100 placeholder-neutral-400"
-          />
-        ) : (
-          <button
-            type="button"
-            onClick={() => setAddingNew(true)}
-            className="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700/50 rounded-xl transition-colors"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M12 5v14M5 12h14"/>
-            </svg>
-            Nouveau projet
-          </button>
+        {/* Formulaire nouveau projet — affiché inline sous la liste */}
+        {addingNew && (
+          <li className="px-2 py-0.5">
+            <input
+              ref={newRef}
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              onBlur={() => { if (!newName.trim()) { setAddingNew(false); setNewName(''); } }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commitNew();
+                if (e.key === 'Escape') { setAddingNew(false); setNewName(''); }
+              }}
+              placeholder="Nom du projet"
+              className="w-full px-2 py-1.5 text-sm rounded-md bg-[#F8F7F4] dark:bg-neutral-800 border border-emerald-500 outline-none text-neutral-900 dark:text-neutral-100 placeholder-neutral-400"
+            />
+          </li>
         )}
-      </div>
+      </ul>
 
       {/* Handle de resize — pointer capture, ne remonte pas aux sensors dnd-kit */}
       <div
