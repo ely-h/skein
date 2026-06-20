@@ -82,7 +82,7 @@ export default function ReadOnlyGanttView({ project }: Props) {
 
         {/* Corps */}
         <div className="relative" style={{ minHeight: gridRows * ROW_H }}>
-          <GanttGrid config={config} zoom="day" rowCount={gridRows} labelW={LABEL_W} />
+          <GanttGrid config={config} zoom="day" rowCount={gridRows} />
 
           {sortedTasks.length > 0 ? sortedTasks.map((task) => (
             <div

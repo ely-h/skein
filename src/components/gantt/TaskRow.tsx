@@ -1,146 +1,26 @@
-import { useSortable } from '@dnd-kit/sortable';
-import type { Task, TaskStatus } from '../../types/index';
+import type { Task } from '../../types/index';
 import type { TimelineConfig } from '../../lib/timeline';
 import { ROW_H } from './constants';
-import type { LabelResizeHandle } from '../../hooks/useLabelResize';
 import TaskBar from './TaskBar';
-
-const STATUS_DOT: Record<TaskStatus, string> = {
-  backlog:     'bg-neutral-500 dark:bg-neutral-400',
-  not_started: 'bg-neutral-300 dark:bg-neutral-500',
-  in_progress: 'bg-sky-400 dark:bg-sky-500',
-  in_review:   'bg-amber-400 dark:bg-amber-500',
-  blocked:     'bg-red-400 dark:bg-red-500',
-  done:        'bg-emerald-400 dark:bg-emerald-500',
-  custom:      'bg-violet-400 dark:bg-violet-500',
-};
 
 interface Props {
   task:          Task;
   config:        TimelineConfig;
-  labelW:        number;
-  labelHandle:   LabelResizeHandle;
-  isResizing:    boolean;
-  onEdit:        (id: string) => void;
   isSelected:    boolean;
   isInGroupDrag: boolean;
   onSelect:      (id: string, additive: boolean) => void;
 }
 
-function PencilIcon() {
-  return (
-    <svg
-      width="13" height="13" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="2"
-      strokeLinecap="round" strokeLinejoin="round"
-    >
-      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-    </svg>
-  );
-}
-
-function GripIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
-      <circle cx="4" cy="2"  r="1.2" />
-      <circle cx="8" cy="2"  r="1.2" />
-      <circle cx="4" cy="6"  r="1.2" />
-      <circle cx="8" cy="6"  r="1.2" />
-      <circle cx="4" cy="10" r="1.2" />
-      <circle cx="8" cy="10" r="1.2" />
-    </svg>
-  );
-}
-
-export default function TaskRow({ task, config, labelW, labelHandle, isResizing, onEdit, isSelected, isInGroupDrag, onSelect }: Props) {
+export default function TaskRow({ task, config, isSelected, isInGroupDrag, onSelect }: Props) {
   const isScheduled = task.startDate !== null && task.endDate !== null;
-
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    setActivatorNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: task.id });
 
   return (
     <div
-      ref={setNodeRef}
-      className={[
-        'group flex border-b border-[#EDEBE5] dark:border-neutral-700/60 transition-colors',
-        isSelected
-          ? 'bg-[#D0E5DF]/50 dark:bg-emerald-950/20 hover:bg-[#D0E5DF] dark:hover:bg-emerald-950/30'
-          : 'hover:bg-[#F0EDE8]/60 dark:hover:bg-neutral-800/40',
-        isDragging ? 'opacity-60 shadow-md' : '',
-      ].join(' ')}
-      style={{
-        minHeight: ROW_H,
-        transform: transform ? `translate3d(0, ${Math.round(transform.y)}px, 0)` : undefined,
-        transition,
-        zIndex: isDragging ? 50 : undefined,
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-        onSelect(task.id, e.shiftKey || e.ctrlKey || e.metaKey);
-      }}
+      className="flex border-b border-[#EDEBE5] dark:border-neutral-700/60"
+      style={{ height: ROW_H }}
     >
-      {/* Étiquette — reste visible lors du scroll horizontal */}
       <div
-        className={[
-          'relative sticky left-0 z-10 flex-none flex items-center gap-1.5 px-2 border-r border-[#E8E6E1] dark:border-neutral-700 transition-colors cursor-default',
-          isSelected
-            ? 'bg-[#D0E5DF] dark:bg-emerald-950/30 group-hover:bg-[#C4DDD5] dark:group-hover:bg-emerald-950/40'
-            : 'bg-[#F8F7F4] dark:bg-neutral-800 group-hover:bg-[#EDE9E3] dark:group-hover:bg-neutral-800',
-        ].join(' ')}
-        data-no-drag=""
-        style={{ width: labelW }}
-      >
-        {/* Handle resize invisible mais cliquable sur le bord droit */}
-        <div
-          aria-hidden
-          {...labelHandle}
-          className="absolute inset-y-0 -right-1 w-2 cursor-col-resize z-10 group/resize"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className={[
-            'absolute inset-y-0 left-1/2 w-px -translate-x-px transition-colors',
-            isResizing ? 'bg-emerald-500' : 'bg-transparent group-hover/resize:bg-emerald-400',
-          ].join(' ')} />
-        </div>
-        {/* Poignée de réordonnage vertical */}
-        <div
-          ref={setActivatorNodeRef}
-          {...attributes}
-          {...listeners}
-          className="flex-none p-0.5 rounded opacity-0 group-hover:opacity-100 text-neutral-300 dark:text-neutral-600 hover:text-neutral-500 dark:hover:text-neutral-400 cursor-grab active:cursor-grabbing transition-opacity"
-          title="Réordonner"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <GripIcon />
-        </div>
-
-        <div className={`flex-none w-1.5 h-1.5 rounded-full transition-colors duration-300 ease-out ${STATUS_DOT[task.status]}`} />
-
-        <span className="break-words text-sm text-neutral-700 dark:text-neutral-300 flex-1 min-w-0">
-          {task.name}
-        </span>
-
-        <button
-          type="button"
-          className="flex-none p-1 rounded-xl opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-[#EDE9E3] dark:hover:bg-neutral-700 transition-all duration-150"
-          onClick={(e) => { e.stopPropagation(); onEdit(task.id); }}
-          title="Modifier"
-        >
-          <PencilIcon />
-        </button>
-      </div>
-
-      {/* Zone barre */}
-      <div
-        className="relative flex-none"
+        className="relative flex-1"
         style={{ width: config.totalDays * config.dayWidth }}
       >
         {isScheduled && (

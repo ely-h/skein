@@ -14,6 +14,7 @@ import { HEADER_WEEK_H, HEADER_DAY_H, ROW_H, ZOOM_CONFIGS } from './constants';
 import GanttHeader from './GanttHeader';
 import GanttGrid from './GanttGrid';
 import TaskRow from './TaskRow';
+import TaskLabelRow from './TaskLabelRow';
 
 const HEADER_H = HEADER_WEEK_H + HEADER_DAY_H;
 
@@ -31,7 +32,8 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
   { zoom, dayWidth, onDayWidthChange, onEditTask, onDragCreate, selectedIds, onSelectChange },
   chartRef,
 ) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRef     = useRef<HTMLDivElement>(null);
+  const labelBodyRef  = useRef<HTMLDivElement>(null);
 
   const tasks            = useTaskStore((s) => s.tasks);
   const reorderTasks     = useTaskStore((s) => s.reorderTasks);
@@ -55,7 +57,6 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
   const activeProject = projects.find((p) => p.id === activeProjectId);
   const sortedTasks   = [...tasks].sort((a, b) => a.order - b.order);
 
-  // Étend les bornes manuelles si une tâche dépasse la plage stockée
   useEffect(() => {
     if (!activeProject) return;
     const expansion = computeRequiredBoundsExpansion(
@@ -79,11 +80,17 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
     return { startDate, totalDays, dayWidth };
   }, [zoom, dayWidth, tasks, activeProject]);
 
-  const totalW = labelW + config.totalDays * config.dayWidth;
+  const totalW = config.totalDays * config.dayWidth;
 
-  // Drag-create : tirer sur la grille vide pour créer une barre.
+  // Synchronise le scroll vertical du panel gauche avec le panel droit
+  const handleScrollSync = useCallback((): void => {
+    if (labelBodyRef.current && scrollRef.current) {
+      labelBodyRef.current.scrollTop = scrollRef.current.scrollTop;
+    }
+  }, []);
+
   const { preview, onMouseDown, result, clearResult } =
-    useDragCreate(config, scrollRef, labelW);
+    useDragCreate(config, scrollRef, 0);
 
   useEffect(() => {
     if (!result) return;
@@ -91,7 +98,6 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
     clearResult();
   }, [result, onDragCreate, clearResult]);
 
-  // Move / resize / tri vertical des barres existantes via dnd-kit.
   const {
     sensors,
     onDragStart,
@@ -101,11 +107,10 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
     isVerticalDragging,
     verticalTargetIndex,
     popVerticalReorder,
-  } = useTaskDrag(config, selectedIds, scrollRef, labelW);
+  } = useTaskDrag(config, selectedIds, scrollRef, 0);
 
-  // Gère la fin d'un drag : tri vertical barre OU tri grip poignée OU nettoyage.
   const handleDragEnd = useCallback((event: DragEndEvent): void => {
-    taskDragEnd(); // commit le pendingReorder interne + push historique horizontal
+    taskDragEnd();
     const vertReorder = popVerticalReorder();
 
     if (vertReorder) {
@@ -116,7 +121,6 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
       return;
     }
 
-    // Tri via poignée (active.id = UUID nu, dans SortableContext)
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     const oldIndex = sortedTasks.findIndex((t) => t.id === String(active.id));
@@ -129,58 +133,85 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
   const gridRows = Math.max(sortedTasks.length, 3);
 
   return (
-    <div ref={scrollRef} className="flex-1 overflow-auto select-none" style={{ minWidth: 0 }}>
-      <div ref={chartRef} style={{ width: totalW }}>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={onDragStart}
+      onDragMove={onDragMove}
+      onDragEnd={handleDragEnd}
+      autoScroll={false}
+    >
+      <div ref={chartRef as React.RefObject<HTMLDivElement>} className="flex flex-1 overflow-hidden">
 
-        {/* Header — collé en haut lors du scroll vertical */}
+        {/* ── Panel gauche : colonne des tâches ── */}
         <div
-          className="sticky top-0 z-20 flex bg-[#F8F7F4] dark:bg-neutral-800 border-b-2 border-[#E8E6E1] dark:border-neutral-700"
-          style={{ height: HEADER_H }}
+          className="relative flex-none flex flex-col bg-[#F8F7F4] dark:bg-neutral-900 border-r border-[#E8E6E1] dark:border-neutral-700"
+          style={{ width: labelW }}
         >
+          {/* En-tête colonne */}
           <div
-            className="sticky left-0 z-30 flex-none flex items-center px-4 bg-[#F8F7F4] dark:bg-neutral-800 border-r border-[#E8E6E1] dark:border-neutral-700 text-sm font-semibold text-neutral-900 dark:text-neutral-100 relative"
-            style={{ width: labelW }}
+            className="flex-none flex items-center px-4 bg-[#F8F7F4] dark:bg-neutral-800 border-b-2 border-[#E8E6E1] dark:border-neutral-700 text-sm font-semibold text-neutral-900 dark:text-neutral-100 z-10"
+            style={{ height: HEADER_H }}
           >
             <span className="truncate">{activeProject?.name ?? 'Gantt'}</span>
-            <div
-              aria-hidden
-              {...labelHandle}
-              className={[
-                'absolute inset-y-0 -right-1 w-2 cursor-col-resize z-10 group/resize',
-              ].join(' ')}
-            >
-              <div className={[
-                'absolute inset-y-0 left-1/2 w-px -translate-x-px transition-colors',
-                isResizing ? 'bg-emerald-500' : 'bg-transparent group-hover/resize:bg-emerald-400',
-              ].join(' ')} />
-            </div>
           </div>
-          <GanttHeader config={config} zoom={zoom} onDayWidthChange={onDayWidthChange} />
+
+          {/* Liste des labels — scroll synchronisé, caché */}
+          <div ref={labelBodyRef} className="flex-1 overflow-hidden">
+            <SortableContext items={sortedTasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+              {sortedTasks.length > 0 ? (
+                sortedTasks.map((task) => (
+                  <TaskLabelRow
+                    key={task.id}
+                    task={task}
+                    onEdit={onEditTask}
+                    isSelected={selectedIds.has(task.id)}
+                    onSelect={handleSelect}
+                  />
+                ))
+              ) : (
+                <div
+                  className="flex items-center justify-center text-sm text-neutral-400 pointer-events-none"
+                  style={{ height: gridRows * ROW_H }}
+                />
+              )}
+            </SortableContext>
+          </div>
+
+          {/* Handle resize */}
+          <div
+            aria-hidden
+            {...labelHandle}
+            className={[
+              'absolute inset-y-0 right-0 w-1.5 cursor-col-resize z-20 transition-colors',
+              isResizing ? 'bg-emerald-500/50' : 'hover:bg-emerald-400/40',
+            ].join(' ')}
+          />
         </div>
 
-        {/* Corps — drag-create + move/resize + tri vertical via DndContext */}
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={onDragStart}
-          onDragMove={onDragMove}
-          onDragEnd={handleDragEnd}
-          autoScroll={false}
+        {/* ── Panel droit : timeline ── */}
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-auto select-none"
+          onScroll={handleScrollSync}
         >
-          <SortableContext items={sortedTasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+          <div style={{ width: totalW }}>
+            {/* Header timeline */}
+            <div
+              className="sticky top-0 z-20 bg-[#F8F7F4] dark:bg-neutral-800 border-b-2 border-[#E8E6E1] dark:border-neutral-700"
+              style={{ height: HEADER_H }}
+            >
+              <GanttHeader config={config} zoom={zoom} onDayWidthChange={onDayWidthChange} />
+            </div>
+
+            {/* Grille + barres */}
             <div
               className="relative cursor-crosshair"
               style={{ minHeight: gridRows * ROW_H }}
               onMouseDown={onMouseDown}
               onClick={() => onSelectChange(new Set())}
             >
-              <GanttGrid config={config} zoom={zoom} rowCount={gridRows} labelW={labelW} />
-
-              {/* Fond opaque de la colonne label — couvre toute la hauteur de la grille */}
-              <div
-                className="absolute top-0 left-0 h-full pointer-events-none bg-[#F8F7F4] dark:bg-neutral-800 border-r border-[#E8E6E1] dark:border-neutral-700"
-                style={{ width: labelW }}
-              />
+              <GanttGrid config={config} zoom={zoom} rowCount={gridRows} />
 
               {sortedTasks.length > 0 ? (
                 sortedTasks.map((task) => (
@@ -188,10 +219,6 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
                     key={task.id}
                     task={task}
                     config={config}
-                    labelW={labelW}
-                    labelHandle={labelHandle}
-                    isResizing={isResizing}
-                    onEdit={onEditTask}
                     isSelected={selectedIds.has(task.id)}
                     isInGroupDrag={isGroupDragging && selectedIds.has(task.id)}
                     onSelect={handleSelect}
@@ -207,11 +234,11 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
               {preview && (
                 <div
                   className="absolute top-0 z-[8] pointer-events-none rounded-sm bg-emerald-400/25 border-x border-emerald-500/50"
-                  style={{ left: labelW + preview.x, width: preview.width, height: '100%' }}
+                  style={{ left: preview.x, width: preview.width, height: '100%' }}
                 />
               )}
 
-              {/* Indicateur de dépôt — drag vertical d'une barre */}
+              {/* Indicateur tri vertical */}
               {isVerticalDragging && verticalTargetIndex !== null && (
                 <div
                   className="absolute left-0 right-0 h-0.5 bg-[#4a7c6a] z-30 pointer-events-none"
@@ -219,11 +246,11 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
                 />
               )}
             </div>
-          </SortableContext>
-        </DndContext>
+          </div>
+        </div>
 
       </div>
-    </div>
+    </DndContext>
   );
 });
 
