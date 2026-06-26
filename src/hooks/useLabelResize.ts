@@ -16,7 +16,7 @@ function readWidth(): number {
       const n = Number(raw);
       if (Number.isFinite(n)) return clamp(n);
     }
-  } catch {}
+  } catch { /* empty */ }
   return DEFAULT_W;
 }
 
@@ -38,7 +38,7 @@ export function useLabelResize(): {
   const startX   = useRef(0);
   const startW   = useRef(0);
   const currentW = useRef(labelW);
-  currentW.current = labelW;
+  useEffect(() => { currentW.current = labelW; }, [labelW]);
 
   useEffect(() => {
     if (!isResizing) return;
@@ -70,7 +70,7 @@ export function useLabelResize(): {
 
   const finish = useCallback((): void => {
     setIsResizing(false);
-    try { localStorage.setItem(STORAGE_KEY, String(currentW.current)); } catch {}
+    try { localStorage.setItem(STORAGE_KEY, String(currentW.current)); } catch { /* empty */ }
   }, []);
 
   const onPointerUp:     React.PointerEventHandler<HTMLDivElement> = useCallback(() => finish(), [finish]);

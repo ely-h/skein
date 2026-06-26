@@ -43,6 +43,8 @@ export function useBarDrag(
   const draggedIdsRef  = useRef<Set<string>>(new Set());
   // Exposé aux barres pour supprimer le onClick après un drag réel
   const dragJustEndedRef = useRef(false);
+  // Capture les handlers actifs pour que pointerup retire exactement ceux ajoutés
+  const removeListenersRef = useRef<(() => void) | null>(null);
 
   const [activeDrag, setActiveDrag] = useState<ActiveDrag | null>(null);
 
@@ -135,19 +137,17 @@ export function useBarDrag(
       }
     }
 
-    window.removeEventListener('pointermove', handlePointerMove);
-    window.removeEventListener('pointerup',   handlePointerUp);
+    removeListenersRef.current?.();
     sessionRef.current    = null;
     daysDeltaRef.current  = 0;
     didDragRef.current    = false;
     draggedIdsRef.current = new Set();
     setActiveDrag(null);
-  }, [handlePointerMove]);
+  }, []);
 
   useEffect(() => () => {
-    window.removeEventListener('pointermove', handlePointerMove);
-    window.removeEventListener('pointerup',   handlePointerUp);
-  }, [handlePointerMove, handlePointerUp]);
+    removeListenersRef.current?.();
+  }, []);
 
   const onBarPointerDown = useCallback((
     e:      React.PointerEvent,
@@ -193,6 +193,11 @@ export function useBarDrag(
     daysDeltaRef.current = 0;
     didDragRef.current   = false;
 
+    removeListenersRef.current = () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup',   handlePointerUp);
+      removeListenersRef.current = null;
+    };
     window.addEventListener('pointermove', handlePointerMove);
     window.addEventListener('pointerup',   handlePointerUp);
   }, [selectedIds, scrollRef, handlePointerMove, handlePointerUp]);

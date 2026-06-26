@@ -88,8 +88,10 @@ export default function App() {
 
   // Réinitialise sélection + historique lors d'un changement de projet
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     setSelectedIds(new Set());
     setDeleteConfirmId(null);
+    /* eslint-enable react-hooks/set-state-in-effect */
     useHistoryStore.getState().reset();
   }, [activeProjectId]);
 
