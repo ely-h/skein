@@ -1,6 +1,8 @@
 import type { Project, Task, TaskStatus, CustomStatus } from '../types/index';
 
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const DATE_RE   = /^\d{4}-\d{2}-\d{2}$/;
+const COLOR_RE  = /^#[0-9a-fA-F]{6}$/;
+const MAX_STR   = 500;
 const VALID_STATUSES: readonly TaskStatus[] = ['backlog', 'not_started', 'in_progress', 'in_review', 'blocked', 'done', 'custom'];
 
 function isStr(v: unknown): v is string {
@@ -31,6 +33,8 @@ function validateTask(raw: unknown, index: number): Task {
     throw new Error(`Tâche ${index} : champ "projectId" manquant`);
   if (!isStr(t.name) || !t.name.trim())
     throw new Error(`Tâche ${index} : champ "name" manquant ou vide`);
+  if (t.name.length > MAX_STR)
+    throw new Error(`Tâche ${index} : "name" dépasse ${MAX_STR} caractères`);
   if (!isNullableDate(t.startDate))
     throw new Error(`Tâche ${index} : "startDate" doit être YYYY-MM-DD ou null`);
   if (!isNullableDate(t.endDate))
@@ -39,6 +43,8 @@ function validateTask(raw: unknown, index: number): Task {
     throw new Error(`Tâche ${index} : "status" invalide (backlog | not_started | in_progress | in_review | blocked | done | custom)`);
   if (t.parentId !== null && !isStr(t.parentId))
     throw new Error(`Tâche ${index} : "parentId" doit être une chaîne ou null`);
+  if (isStr(t.parentId) && t.parentId === t.id)
+    throw new Error(`Tâche ${index} : "parentId" ne peut pas pointer sur soi-même`);
   if (typeof t.order !== 'number' || !isFinite(t.order))
     throw new Error(`Tâche ${index} : "order" doit être un nombre`);
 
@@ -53,6 +59,10 @@ function validateTask(raw: unknown, index: number): Task {
       throw new Error(`Tâche ${index} : "customStatus" requis (label + color) quand status === 'custom'`);
     }
     const cs = t.customStatus as Record<string, unknown>;
+    if (!COLOR_RE.test(cs.color as string))
+      throw new Error(`Tâche ${index} : "customStatus.color" doit être une couleur hex (#RRGGBB)`);
+    if ((cs.label as string).length > MAX_STR)
+      throw new Error(`Tâche ${index} : "customStatus.label" dépasse ${MAX_STR} caractères`);
     customStatus = { label: cs.label as string, color: cs.color as string };
   }
 
@@ -93,6 +103,23 @@ export function parseProjectJson(text: string): Project {
     throw new Error('Champ "tasks" doit être un tableau');
 
   const tasks = obj.tasks.map((t, i) => validateTask(t, i + 1));
+
+  // Vérifie que tous les parentId pointent vers des ids existants et sans cycle
+  const idSet = new Set(tasks.map((t) => t.id));
+  const parentMap = new Map(tasks.map((t) => [t.id, t.parentId]));
+  for (const task of tasks) {
+    if (task.parentId === null) continue;
+    if (!idSet.has(task.parentId))
+      throw new Error(`Tâche "${task.id}" : "parentId" référence un id inconnu`);
+    // Remonte la chaîne pour détecter les cycles
+    const visited = new Set<string>();
+    let cursor: string | null = task.id;
+    while (cursor !== null) {
+      if (visited.has(cursor)) throw new Error(`Tâche "${task.id}" : cycle détecté dans "parentId"`);
+      visited.add(cursor);
+      cursor = parentMap.get(cursor) ?? null;
+    }
+  }
 
   // timelineStart / timelineEnd sont optionnels (rétro-compat avec les exports avant v2/04)
   if (obj.timelineStart !== undefined && !isNullableDate(obj.timelineStart))
