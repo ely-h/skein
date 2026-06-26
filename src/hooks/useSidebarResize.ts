@@ -16,7 +16,7 @@ function readWidth(): number {
       const n = Number(raw);
       if (Number.isFinite(n)) return clamp(n);
     }
-  } catch {}
+  } catch { /* empty */ }
   return DEFAULT_W;
 }
 
@@ -38,8 +38,7 @@ export function useSidebarResize(): {
   const startX   = useRef(0);
   const startW   = useRef(0);
   const currentW = useRef(width);
-  // Sync ref with state so callbacks always see the latest width.
-  currentW.current = width;
+  useEffect(() => { currentW.current = width; }, [width]);
 
   // Cursor + selection lock while dragging — avoids text selection and cursor flicker.
   useEffect(() => {
@@ -73,7 +72,7 @@ export function useSidebarResize(): {
 
   const finish = useCallback((): void => {
     setIsResizing(false);
-    try { localStorage.setItem(STORAGE_KEY, String(currentW.current)); } catch {}
+    try { localStorage.setItem(STORAGE_KEY, String(currentW.current)); } catch { /* empty */ }
   }, []);
 
   const onPointerUp:     React.PointerEventHandler<HTMLDivElement> = useCallback(() => finish(), [finish]);

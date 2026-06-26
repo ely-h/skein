@@ -69,6 +69,7 @@ const GanttChart = forwardRef<HTMLDivElement, Props>(function GanttChart(
     if (expansion) {
       setTimelineRange(activeProject.id, expansion.timelineStart, expansion.timelineEnd);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tasks, activeProject?.timelineStart, activeProject?.timelineEnd, activeProject?.id, setTimelineRange]);
 
   const config = useMemo<TimelineConfig>(() => {
